@@ -25,7 +25,8 @@ Read in this order for complete understanding:
 | 8 | [PLANES.md](PLANES.md) | Four planes architecture (governance, execution, perception, ops) |
 | 9 | [PROPOSAL.md](PROPOSAL.md) | Structured proposal schema (eliminates ambiguity) |
 | 10 | [PERMITS.md](PERMITS.md) | Permit token format and verification |
-| 11 | [EVIDENCE.md](EVIDENCE.md) | Evidence packet schema and sensor types |
+| 11 | [PERMIT_TOKENS.md](PERMIT_TOKENS.md) | HMAC-based permit token implementation (v0.2.0+) |
+| 12 | [EVIDENCE.md](EVIDENCE.md) | Evidence packet schema and sensor types |
 
 ## Authority
 
@@ -45,4 +46,5 @@ Each specification document includes its own version number. The overall specifi
 | PLANES.md | 0.1.0 |
 | PROPOSAL.md | 0.1.0 |
 | PERMITS.md | 0.1.0 |
+| PERMIT_TOKENS.md | 0.2.0-dev |
 | EVIDENCE.md | 0.1.0 |

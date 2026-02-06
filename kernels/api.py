@@ -59,6 +59,22 @@ from kernels.audit.replay import (
 from kernels.jurisdiction.policy import JurisdictionPolicy
 
 # -----------------------------------------------------------------------------
+# Permit System (v0.2.0+)
+# -----------------------------------------------------------------------------
+from kernels.permits import (
+    NonceRegistry,
+    PermitBuilder,
+    PermitToken,
+    PermitVerificationResult,
+    canonical_permit_bytes,
+    compute_permit_id,
+    generate_nonce,
+    sign_permit,
+    verify_permit,
+    verify_signature,
+)
+
+# -----------------------------------------------------------------------------
 # Public API surface
 # -----------------------------------------------------------------------------
 __all__ = [
@@ -88,4 +104,15 @@ __all__ = [
     "ReplayResult",
     # Jurisdiction
     "JurisdictionPolicy",
+    # Permit System (v0.2.0+)
+    "PermitToken",
+    "PermitBuilder",
+    "PermitVerificationResult",
+    "NonceRegistry",
+    "canonical_permit_bytes",
+    "compute_permit_id",
+    "generate_nonce",
+    "sign_permit",
+    "verify_permit",
+    "verify_signature",
 ]

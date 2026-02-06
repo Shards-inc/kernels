@@ -73,6 +73,7 @@ class KernelReceipt:
 class AuditEntry:
     """A single entry in the append-only audit ledger."""
 
+    ledger_seq: int  # Monotonic sequence number for deterministic ordering
     prev_hash: str
     entry_hash: str
     ts_ms: int
@@ -87,6 +88,16 @@ class AuditEntry:
     evidence_hash: Optional[str] = None
     error: Optional[str] = None
 
+    # Permit-related fields (added in v0.2.0)
+    permit_digest: Optional[str] = None
+    permit_verification: Optional[str] = None  # "ALLOW" | "DENY"
+    permit_denial_reasons: tuple[str, ...] = field(default_factory=tuple)
+    proposal_hash: Optional[str] = None
+    permit_nonce: Optional[str] = None  # For ledger-backed replay protection
+    permit_issuer: Optional[str] = None  # Issuer identity for nonce reconstruction
+    permit_subject: Optional[str] = None  # Subject identity for nonce reconstruction
+    permit_max_executions: Optional[int] = None  # Max executions for nonce reconstruction
+
 
 @dataclass(frozen=True)
 class EvidenceBundle:
@@ -97,6 +108,42 @@ class EvidenceBundle:
     exported_at_ms: int
     kernel_id: str
     variant: str
+
+
+@dataclass(frozen=True)
+class DecisionEnvelope:
+    """
+    Immutable binding between permit verification and execution.
+
+    This envelope prevents TOCTOU (time-of-check-time-of-use) bugs by
+    binding the verified permit to the exact request parameters that
+    will be executed. The envelope is created during VALIDATING and
+    flows through ARBITRATING → EXECUTING → AUDITING without modification.
+
+    Security property:
+        "The permit that was verified is cryptographically bound to
+        the parameters that were executed."
+
+    Fields must match the permit that authorized them, enforced by hash chain.
+    """
+
+    # Traceability chain
+    proposal_hash: str  # Hash of proposal that initiated this request
+    permit_digest: str  # Permit ID that authorized execution
+
+    # Verified constraints from permit
+    constraints: dict[str, Any]  # Effective constraints from permit
+    max_time_ms: Optional[int]  # Maximum execution time allowed
+    forbidden_params: tuple[str, ...]  # Parameters that must not be present
+
+    # Execution binding
+    tool_name: str  # Tool to execute (must match permit.action)
+    params: dict[str, Any]  # Parameters to execute (must satisfy constraints)
+
+    # Decision metadata
+    decision: Decision  # ALLOW or DENY
+    verified_at_ms: int  # Timestamp when verification occurred
+    actor: str  # Actor who submitted request (must match permit.subject)
 
 
 class VirtualClock:

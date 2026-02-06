@@ -53,12 +53,20 @@ def serialize_for_audit(
     params_hash: str | None = None,
     evidence_hash: str | None = None,
     error: str | None = None,
+    permit_digest: str | None = None,
+    permit_verification: str | None = None,
+    permit_denial_reasons: tuple[str, ...] | None = None,
+    proposal_hash: str | None = None,
+    permit_nonce: str | None = None,
+    permit_issuer: str | None = None,
+    permit_subject: str | None = None,
+    permit_max_executions: int | None = None,
 ) -> str:
     """Serialize audit entry data for hashing.
-    
+
     Creates a deterministic string representation of audit entry fields
     for use in hash chain computation.
-    
+
     Args:
         request_id: Unique request identifier.
         actor: Actor who submitted the request.
@@ -71,7 +79,15 @@ def serialize_for_audit(
         params_hash: Hash of parameters, if any.
         evidence_hash: Hash of evidence, if any.
         error: Error message, if any.
-        
+        permit_digest: Permit ID if permit was used (v0.2.0+).
+        permit_verification: "ALLOW" | "DENY" if permit was verified (v0.2.0+).
+        permit_denial_reasons: Reason codes if permit denied (v0.2.0+).
+        proposal_hash: Hash of proposal that initiated this request (v0.2.0+).
+        permit_nonce: Nonce from permit for ledger-backed replay protection (v0.2.0+).
+        permit_issuer: Issuer identity for nonce reconstruction (v0.2.0+).
+        permit_subject: Subject identity for nonce reconstruction (v0.2.0+).
+        permit_max_executions: Max executions for nonce reconstruction (v0.2.0+).
+
     Returns:
         Deterministic string representation for hashing.
     """
@@ -87,20 +103,29 @@ def serialize_for_audit(
         "params_hash": params_hash,
         "evidence_hash": evidence_hash,
         "error": error,
+        "permit_digest": permit_digest,
+        "permit_verification": permit_verification,
+        "permit_denial_reasons": list(permit_denial_reasons) if permit_denial_reasons else None,
+        "proposal_hash": proposal_hash,
+        "permit_nonce": permit_nonce,
+        "permit_issuer": permit_issuer,
+        "permit_subject": permit_subject,
+        "permit_max_executions": permit_max_executions,
     }
     return serialize_deterministic(entry_dict)
 
 
 def audit_entry_to_dict(entry: Any) -> dict[str, Any]:
     """Convert an AuditEntry to a dictionary.
-    
+
     Args:
         entry: AuditEntry instance.
-        
+
     Returns:
         Dictionary representation of the entry.
     """
-    return {
+    result = {
+        "ledger_seq": entry.ledger_seq if hasattr(entry, "ledger_seq") else 0,
         "prev_hash": entry.prev_hash,
         "entry_hash": entry.entry_hash,
         "ts_ms": entry.ts_ms,
@@ -115,3 +140,23 @@ def audit_entry_to_dict(entry: Any) -> dict[str, Any]:
         "evidence_hash": entry.evidence_hash,
         "error": entry.error,
     }
+
+    # Add permit fields if present (v0.2.0+)
+    if hasattr(entry, "permit_digest"):
+        result["permit_digest"] = entry.permit_digest
+    if hasattr(entry, "permit_verification"):
+        result["permit_verification"] = entry.permit_verification
+    if hasattr(entry, "permit_denial_reasons"):
+        result["permit_denial_reasons"] = list(entry.permit_denial_reasons) if entry.permit_denial_reasons else None
+    if hasattr(entry, "proposal_hash"):
+        result["proposal_hash"] = entry.proposal_hash
+    if hasattr(entry, "permit_nonce"):
+        result["permit_nonce"] = entry.permit_nonce
+    if hasattr(entry, "permit_issuer"):
+        result["permit_issuer"] = entry.permit_issuer
+    if hasattr(entry, "permit_subject"):
+        result["permit_subject"] = entry.permit_subject
+    if hasattr(entry, "permit_max_executions"):
+        result["permit_max_executions"] = entry.permit_max_executions
+
+    return result

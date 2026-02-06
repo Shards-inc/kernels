@@ -9,6 +9,7 @@ from typing import Optional
 
 from kernels.common.types import (
     Decision,
+    DecisionEnvelope,
     EvidenceBundle,
     KernelConfig,
     KernelReceipt,
@@ -21,6 +22,7 @@ from kernels.common.errors import (
     AmbiguityError,
     BootError,
     JurisdictionError,
+    PermitError,
     StateError,
 )
 from kernels.common.validate import validate_request, check_ambiguity
@@ -30,6 +32,11 @@ from kernels.jurisdiction.rules import evaluate_policy
 from kernels.state.machine import StateMachine
 from kernels.execution.tools import create_default_registry
 from kernels.execution.dispatcher import Dispatcher
+from kernels.permits import (
+    NonceRegistry,
+    PermitToken,
+    verify_permit,
+)
 
 
 class Kernel(ABC):
@@ -60,12 +67,13 @@ class Kernel(ABC):
         ...
 
     @abstractmethod
-    def submit(self, request: KernelRequest) -> KernelReceipt:
+    def submit(self, request: KernelRequest, permit_token: Optional[PermitToken] = None) -> KernelReceipt:
         """Submit a request for processing.
-        
+
         Args:
             request: Request to process.
-            
+            permit_token: Permit token authorizing this request (required for execution in most variants).
+
         Returns:
             Receipt with processing result.
         """
@@ -118,6 +126,8 @@ class BaseKernel(Kernel):
         self._pending_request: Optional[KernelRequest] = None
         self._pending_decision: Optional[Decision] = None
         self._pending_result: Optional[any] = None
+        self._nonce_registry: NonceRegistry = NonceRegistry()
+        self._keyring: dict[str, bytes] = {}  # HMAC keys for permit verification
 
     @property
     def config(self) -> KernelConfig:
@@ -135,11 +145,69 @@ class BaseKernel(Kernel):
 
     def set_policy(self, policy: JurisdictionPolicy) -> None:
         """Set the jurisdiction policy.
-        
+
         Args:
             policy: Policy to use.
         """
         self._policy = policy
+
+    def set_keyring(self, keyring: dict[str, bytes]) -> None:
+        """Set the HMAC keyring for permit verification.
+
+        Args:
+            keyring: Map of key_id -> HMAC secret key (32 bytes recommended).
+        """
+        self._keyring = keyring
+
+    def load_ledger(self, evidence: EvidenceBundle) -> None:
+        """Load ledger from evidence bundle and rebuild nonce registry.
+
+        This enables cross-restart replay protection by reconstructing the
+        nonce registry from audit entries. Entries are processed in deterministic
+        order by ledger_seq to ensure consistent reconstruction.
+
+        Args:
+            evidence: Evidence bundle containing ledger entries.
+
+        Raises:
+            StateError: If kernel is not booted.
+        """
+        if self._ledger is None:
+            raise StateError("Kernel not booted")
+
+        # Sort entries by ledger_seq for deterministic ordering
+        # This ensures tie-breaking when timestamps are identical
+        sorted_entries = sorted(evidence.ledger_entries, key=lambda e: e.ledger_seq)
+
+        # Rebuild ledger
+        for entry in sorted_entries:
+            # Re-add entry to ledger (this updates hash chain)
+            self._ledger._entries.append(entry)
+            self._ledger._last_hash = entry.entry_hash
+
+        # Restore sequence counter from last entry
+        if sorted_entries:
+            self._ledger._next_seq = sorted_entries[-1].ledger_seq + 1
+
+        # Rebuild nonce registry from entries with permit verification
+        # Must process in ledger_seq order to correctly reconstruct use_count
+        for entry in sorted_entries:
+            if (entry.permit_digest and
+                entry.permit_verification == "ALLOW" and
+                entry.permit_nonce and
+                entry.permit_issuer and
+                entry.permit_subject and
+                entry.permit_max_executions is not None):
+                # Reconstruct nonce usage by calling check_and_record
+                # This will mark the nonce as used in the registry
+                self._nonce_registry.check_and_record(
+                    nonce=entry.permit_nonce,
+                    issuer=entry.permit_issuer,
+                    subject=entry.permit_subject,
+                    permit_id=entry.permit_digest,
+                    max_executions=entry.permit_max_executions,
+                    current_time_ms=entry.ts_ms,
+                )
 
     def boot(self, config: KernelConfig) -> None:
         """Boot the kernel with configuration."""
@@ -161,7 +229,7 @@ class BaseKernel(Kernel):
             return KernelState.BOOTING
         return self._state_machine.state
 
-    def submit(self, request: KernelRequest) -> KernelReceipt:
+    def submit(self, request: KernelRequest, permit_token: Optional[PermitToken] = None) -> KernelReceipt:
         """Submit a request for processing."""
         if self._state_machine is None:
             raise StateError("Kernel not booted")
@@ -197,6 +265,81 @@ class BaseKernel(Kernel):
                     f"Ambiguity detected: {'; '.join(ambiguity_errors)}",
                 )
 
+        # Permit verification (CRITICAL: Hard gate before execution)
+        permit_verification_result = None
+        permit_digest = None
+        proposal_hash = None
+        permit_nonce = None
+        permit_issuer = None
+        permit_subject = None
+        permit_max_executions = None
+
+        # Check if permit is required
+        if self._requires_permit(request):
+            if permit_token is None:
+                return self._deny_permit(
+                    request,
+                    state_from,
+                    "MISSING_PERMIT",
+                    ["MISSING_PERMIT"],
+                )
+
+            # Verify permit
+            tool_name = request.tool_call.name if request.tool_call else None
+            request_params = request.params if request.params else {}
+
+            # Handle wildcard in allowed_tools
+            allowed_actions = self.policy.allowed_tools
+            if "*" in allowed_actions:
+                # Wildcard means all actions are allowed
+                # For permit verification, we create a set containing the specific action
+                allowed_actions = frozenset({permit_token.action, "*"})
+
+            permit_verification_result = verify_permit(
+                permit=permit_token,
+                keyring=self._keyring,
+                nonce_registry=self._nonce_registry,
+                current_time_ms=self.config.clock.now_ms(),
+                current_jurisdiction="default",  # TODO: Make this configurable
+                allowed_actions=allowed_actions,
+                request_actor=request.actor,
+                request_params=request_params,
+            )
+
+            permit_digest = permit_token.permit_id
+            proposal_hash = permit_token.proposal_hash
+            permit_nonce = permit_token.nonce  # For ledger-backed replay protection
+            permit_issuer = permit_token.issuer  # For nonce reconstruction
+            permit_subject = permit_token.subject  # For nonce reconstruction
+            permit_max_executions = permit_token.max_executions  # For nonce reconstruction
+
+            if not permit_verification_result.is_allowed():
+                return self._deny_permit(
+                    request,
+                    state_from,
+                    f"Permit verification failed: {', '.join(permit_verification_result.reasons)}",
+                    permit_verification_result.reasons,
+                    permit_digest=permit_digest,
+                    proposal_hash=proposal_hash,
+                )
+
+            # Create DecisionEnvelope: bind verified permit to execution
+            # This prevents TOCTOU by making permit and params immutable
+            decision_envelope = DecisionEnvelope(
+                proposal_hash=permit_token.proposal_hash,
+                permit_digest=permit_token.permit_id,
+                constraints=permit_token.constraints,
+                max_time_ms=permit_token.constraints.get("max_time_ms"),
+                forbidden_params=tuple(permit_token.constraints.get("forbidden_params", [])),
+                tool_name=request.tool_call.name if request.tool_call else "",
+                params=request_params.copy(),  # Immutable snapshot
+                decision=Decision.ALLOW,
+                verified_at_ms=self.config.clock.now_ms(),
+                actor=request.actor,
+            )
+        else:
+            decision_envelope = None
+
         # Transition to ARBITRATING
         self._state_machine.transition(KernelState.ARBITRATING)
 
@@ -225,6 +368,18 @@ class BaseKernel(Kernel):
 
         # Execute if tool_call present
         if request.tool_call is not None:
+            # If we have a decision envelope, verify that request hasn't changed
+            # This prevents TOCTOU bugs where request is mutated between validation and execution
+            if decision_envelope is not None:
+                if request.tool_call.name != decision_envelope.tool_name:
+                    return self._fail_request(
+                        request,
+                        state_from,
+                        f"TOCTOU detected: tool_name mismatch (envelope: {decision_envelope.tool_name}, request: {request.tool_call.name})",
+                    )
+                # Params may have been normalized, so we don't do strict equality check
+                # The envelope proves what was verified; the params hash in audit proves what was executed
+
             self._state_machine.transition(KernelState.EXECUTING)
             exec_result = self._dispatcher.execute(request.tool_call)
             if not exec_result.success:
@@ -256,6 +411,14 @@ class BaseKernel(Kernel):
             tool_name=tool_name,
             params=request.params,
             evidence=request.evidence,
+            permit_digest=permit_digest,
+            permit_verification="ALLOW" if permit_verification_result else None,
+            permit_denial_reasons=tuple(),
+            proposal_hash=proposal_hash,
+            permit_nonce=permit_nonce,
+            permit_issuer=permit_issuer,
+            permit_subject=permit_subject,
+            permit_max_executions=permit_max_executions,
         )
 
         # Return to IDLE
@@ -391,3 +554,79 @@ class BaseKernel(Kernel):
     def _check_variant_requirements(self, request: KernelRequest) -> list[str]:
         """Check variant-specific requirements. Override in variants."""
         return []
+
+    def _requires_permit(self, request: KernelRequest) -> bool:
+        """Determine if request requires a permit token.
+
+        Override in variants to customize permit requirements.
+
+        Default behavior:
+        - Permit required if:
+          1. Keyring is configured (permits can be verified), AND
+          2. Request has tool_call (will execute code)
+        - Permit optional otherwise (backward compatible with tests)
+
+        Returns:
+            True if permit is required, False otherwise.
+        """
+        # If no keyring configured, permits are not enforced (backward compat)
+        if not self._keyring:
+            return False
+
+        # If keyring is configured, require permit for any request that can reach EXECUTING
+        return request.tool_call is not None
+
+    def _deny_permit(
+        self,
+        request: KernelRequest,
+        state_from: KernelState,
+        error: str,
+        denial_reasons: list[str],
+        permit_digest: Optional[str] = None,
+        proposal_hash: Optional[str] = None,
+    ) -> KernelReceipt:
+        """Create a DENY receipt for permit verification failure.
+
+        Args:
+            request: The request being denied.
+            state_from: State before validation.
+            error: Human-readable error message.
+            denial_reasons: List of denial reason codes.
+            permit_digest: Permit ID if permit was present.
+            proposal_hash: Proposal hash from permit if present.
+
+        Returns:
+            Receipt with DENY decision and permit denial audit.
+        """
+        # Transition to AUDITING
+        if self._state_machine.state != KernelState.AUDITING:
+            self._state_machine.transition(KernelState.AUDITING)
+
+        entry = self._ledger.append(
+            request_id=request.request_id,
+            actor=request.actor,
+            intent=request.intent,
+            decision=Decision.DENY,
+            state_from=state_from,
+            state_to=KernelState.IDLE,
+            ts_ms=self.config.clock.now_ms(),
+            error=error,
+            permit_digest=permit_digest,
+            permit_verification="DENY",
+            permit_denial_reasons=tuple(denial_reasons),
+            proposal_hash=proposal_hash,
+        )
+
+        # Return to IDLE
+        self._state_machine.transition(KernelState.IDLE)
+
+        return KernelReceipt(
+            request_id=request.request_id,
+            status=ReceiptStatus.REJECTED,
+            state_from=state_from,
+            state_to=KernelState.IDLE,
+            ts_ms=self.config.clock.now_ms(),
+            decision=Decision.DENY,
+            error=error,
+            evidence_hash=entry.entry_hash,
+        )

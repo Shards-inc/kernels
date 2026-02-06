@@ -39,6 +39,7 @@ class AuditLedger:
         self._variant = variant
         self._entries: list[AuditEntry] = []
         self._last_hash = genesis_hash()
+        self._next_seq = 0  # Monotonic sequence counter for deterministic ordering
 
     @property
     def kernel_id(self) -> str:
@@ -78,9 +79,17 @@ class AuditLedger:
         params: Optional[dict[str, Any]] = None,
         evidence: Optional[str] = None,
         error: Optional[str] = None,
+        permit_digest: Optional[str] = None,
+        permit_verification: Optional[str] = None,
+        permit_denial_reasons: Optional[tuple[str, ...]] = None,
+        proposal_hash: Optional[str] = None,
+        permit_nonce: Optional[str] = None,
+        permit_issuer: Optional[str] = None,
+        permit_subject: Optional[str] = None,
+        permit_max_executions: Optional[int] = None,
     ) -> AuditEntry:
         """Append a new entry to the ledger.
-        
+
         Args:
             request_id: Unique request identifier.
             actor: Actor who submitted the request.
@@ -93,10 +102,18 @@ class AuditLedger:
             params: Parameters passed to tool, if any.
             evidence: Evidence string, if any.
             error: Error message, if any.
-            
+            permit_digest: Permit ID if permit was used (v0.2.0+).
+            permit_verification: "ALLOW" | "DENY" if permit was verified (v0.2.0+).
+            permit_denial_reasons: Reason codes if permit denied (v0.2.0+).
+            proposal_hash: Hash of proposal that initiated this request (v0.2.0+).
+            permit_nonce: Nonce from permit for ledger-backed replay protection (v0.2.0+).
+            permit_issuer: Issuer identity for nonce reconstruction (v0.2.0+).
+            permit_subject: Subject identity for nonce reconstruction (v0.2.0+).
+            permit_max_executions: Max executions for nonce reconstruction (v0.2.0+).
+
         Returns:
             The newly created audit entry.
-            
+
         Raises:
             AuditError: If entry creation fails.
         """
@@ -118,13 +135,25 @@ class AuditLedger:
                 params_hash=params_hash,
                 evidence_hash=evidence_hash,
                 error=error,
+                permit_digest=permit_digest,
+                permit_verification=permit_verification,
+                permit_denial_reasons=permit_denial_reasons,
+                proposal_hash=proposal_hash,
+                permit_nonce=permit_nonce,
+                permit_issuer=permit_issuer,
+                permit_subject=permit_subject,
+                permit_max_executions=permit_max_executions,
             )
 
             # Compute entry hash using chain
             entry_hash = compute_chain_hash(self._last_hash, entry_data)
 
+            # Assign sequence number
+            ledger_seq = self._next_seq
+
             # Create entry
             entry = AuditEntry(
+                ledger_seq=ledger_seq,
                 prev_hash=self._last_hash,
                 entry_hash=entry_hash,
                 ts_ms=ts_ms,
@@ -138,11 +167,20 @@ class AuditLedger:
                 params_hash=params_hash,
                 evidence_hash=evidence_hash,
                 error=error,
+                permit_digest=permit_digest,
+                permit_verification=permit_verification,
+                permit_denial_reasons=permit_denial_reasons or tuple(),
+                proposal_hash=proposal_hash,
+                permit_nonce=permit_nonce,
+                permit_issuer=permit_issuer,
+                permit_subject=permit_subject,
+                permit_max_executions=permit_max_executions,
             )
 
             # Append and update chain
             self._entries.append(entry)
             self._last_hash = entry_hash
+            self._next_seq += 1  # Increment sequence counter
 
             return entry
 

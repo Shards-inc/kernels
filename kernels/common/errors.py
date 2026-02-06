@@ -104,9 +104,26 @@ class ValidationError(KernelError):
 
 class ExecutionError(KernelError):
     """Raised when tool execution fails.
-    
+
     Execution errors occur during the execution phase when a tool
     encounters an error during operation.
+    """
+
+    pass
+
+
+class PermitError(KernelError):
+    """Raised when permit verification fails.
+
+    Permit errors occur during the validation phase when a permit token
+    cannot be verified or is missing when required. This includes:
+    - Missing permit when required (MISSING_PERMIT)
+    - Invalid signature (SIGNATURE_INVALID)
+    - Expired permit (EXPIRED)
+    - Replay attempts (REPLAY_DETECTED)
+    - Jurisdiction/action/subject mismatches
+
+    All permit errors result in DENY with reason codes for audit trail.
     """
 
     pass
