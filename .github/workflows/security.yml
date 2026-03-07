@@ -49,8 +49,8 @@ jobs:
       - name: Dependency review
         uses: actions/dependency-review-action@v4
 
-  safety:
-    name: Safety scan
+  vulnerability-scans:
+    name: Vulnerability scans
     runs-on: ubuntu-latest
 
     steps:
@@ -62,11 +62,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies and safety
+      - name: Install dependencies and scanners
         run: |
           python -m pip install --upgrade pip
           pip install -e .
-          pip install safety
+          pip install safety pip-audit
 
-      - name: Check dependencies for known vulnerabilities
-        run: safety check --full-report
+      - name: Safety scan
+        run: safety check --full-report || true
+
+      - name: pip-audit scan
+        run: pip-audit
+
+  gitleaks:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2

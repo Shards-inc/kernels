@@ -82,3 +82,26 @@ class SQLiteAuditStorage:
             ).fetchall()
 
         return [json.loads(row[0]) for row in rows]
+
+    def health(self) -> dict[str, Any]:
+        """Return health diagnostics for this storage backend."""
+        try:
+            with self._connect() as connection:
+                table_exists = connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='audit_entries'"
+                ).fetchone()
+                entry_count = connection.execute(
+                    "SELECT COUNT(1) FROM audit_entries"
+                ).fetchone()
+        except sqlite3.Error as exc:
+            return {
+                "ok": False,
+                "database_path": str(self._database_path),
+                "error": str(exc),
+            }
+
+        return {
+            "ok": bool(table_exists),
+            "database_path": str(self._database_path),
+            "entries": int(entry_count[0]) if entry_count else 0,
+        }
