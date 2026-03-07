@@ -15,6 +15,8 @@ class ThreadSafeNonceRegistry:
         self._registry: dict[tuple[str, str, str], NonceRecord] = {}
         self._ttl_ms = ttl_ms
         self._lock = RLock()
+        self._cleanup_runs = 0
+        self._cleaned_records = 0
 
     def check_and_record(
         self,
@@ -68,10 +70,21 @@ class ThreadSafeNonceRegistry:
         with self._lock:
             return self._cleanup_locked(current_time_ms)
 
+    def stats(self) -> dict[str, int | None]:
+        """Return simple observability metrics for registry operations."""
+        with self._lock:
+            return {
+                "size": len(self._registry),
+                "ttl_ms": self._ttl_ms,
+                "cleanup_runs": self._cleanup_runs,
+                "cleaned_records": self._cleaned_records,
+            }
+
     def _cleanup_locked(self, current_time_ms: int) -> int:
         if self._ttl_ms is None:
             return 0
 
+        self._cleanup_runs += 1
         stale_keys = [
             key
             for key, record in self._registry.items()
@@ -79,4 +92,7 @@ class ThreadSafeNonceRegistry:
         ]
         for key in stale_keys:
             del self._registry[key]
-        return len(stale_keys)
+
+        removed_count = len(stale_keys)
+        self._cleaned_records += removed_count
+        return removed_count
