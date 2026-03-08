@@ -150,6 +150,7 @@ python -m kernels --help
 |----------|---------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Component boundaries and data flows |
 | [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) | Adversary model + mitigations |
+| [docs/pipelines/HPC_CICD_ARCHITECTURE.md](docs/pipelines/HPC_CICD_ARCHITECTURE.md) | Production-grade CI/CD architecture for kernel projects |
 | [docs/FAQ.md](docs/FAQ.md) | Usage clarifications |
 
 ---

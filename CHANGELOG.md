@@ -8,6 +8,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- Added a production-grade HPC CI/CD architecture reference document covering deterministic build strategy, GPU matrix validation, release gating, and scaling guidance.
+- Added new GitHub Actions workflows for expanded HPC matrix validation, dedicated GPU hardware testing, benchmark regression gating, and docs build verification.
+- Added a benchmark regression check utility script with baseline support to enforce latency performance thresholds in CI.
+- Added MkDocs configuration to enable strict documentation build checks in CI.
 - Added a scheduled dependency health workflow that validates installation integrity, runs `pip check`, audits vulnerabilities with `pip-audit`, and verifies package imports across Python 3.9-3.12.
 - Added a weekly dependency canary workflow that upgrades core quality tooling to latest versions and runs lint, type checks, tests, and package build validation.
 - Expanded CI workflow to run a Python 3.9-3.12 matrix with linting, format checks, type checking, security scanning, coverage-enforced tests, smoke verification, and package build validation.
@@ -27,6 +31,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- Added a production-grade HPC CI/CD architecture reference document covering deterministic build strategy, GPU matrix validation, release gating, and scaling guidance.
+- Added new GitHub Actions workflows for expanded HPC matrix validation, dedicated GPU hardware testing, benchmark regression gating, and docs build verification.
+- Added a benchmark regression check utility script with baseline support to enforce latency performance thresholds in CI.
+- Added MkDocs configuration to enable strict documentation build checks in CI.
 - Initial kernel implementation with deterministic state machine
 - Core types: KernelState, KernelRequest, KernelReceipt, Decision, ReceiptStatus
 - Append-only audit ledger with hash-chained entries
