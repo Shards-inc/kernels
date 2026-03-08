@@ -1,4 +1,4 @@
-# KERNELS — Deterministic Control Planes for AI Systems
+# KERNELS - Deterministic Control Planes for AI Systems
 
 A **kernel** is a deterministic state machine that governs AI agent execution via **jurisdiction**, **fail-closed arbitration**, and an **append-only hash-chained audit ledger**.
 
