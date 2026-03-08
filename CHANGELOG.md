@@ -8,6 +8,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- Added a scheduled dependency health workflow that validates installation integrity, runs `pip check`, audits vulnerabilities with `pip-audit`, and verifies package imports across Python 3.9-3.12.
+- Added a weekly dependency canary workflow that upgrades core quality tooling to latest versions and runs lint, type checks, tests, and package build validation.
 - Expanded CI workflow to run a Python 3.9-3.12 matrix with linting, format checks, type checking, security scanning, coverage-enforced tests, smoke verification, and package build validation.
 - Added dedicated smoke workflow for pull requests and manual dispatch execution.
 - Added thread-safe nonce registry reference implementation with TTL cleanup support and observability metrics via `stats()`.
