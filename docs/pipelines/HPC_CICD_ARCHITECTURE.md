@@ -1,117 +1,203 @@
 # HPC CI/CD Architecture for KERNELS
 
-This document defines a production-grade CI/CD design for compute-kernel style
-repositories where correctness, determinism, and hardware compatibility are first-
-class release gates.
+This document defines a production-grade CI/CD topology for compute-kernel style
+repositories where determinism, security, hardware compatibility, and release
+repeatability are first-class gates.
 
-## Pipeline Layers
+## 1) CI/CD Topology
 
 ```text
-Commit
-  -> Static Analysis
-  -> Deterministic Build Matrix
-  -> CPU + GPU Test Matrix
-  -> Security / Supply Chain
-  -> Numerical Validation
-  -> Performance Regression Validation
-  -> Artifact Packaging + Attestation
-  -> Release + Registry Publish
-  -> Production Telemetry Hooks
+Developer
+  -> Pull Request / Push
+  -> Layer 1: Pre-commit Validation
+  -> Layer 2: Static Analysis
+  -> Layer 3: Dependency & Supply Chain
+  -> Layer 4: Build Matrix
+  -> Layer 5: Kernel Compilation
+  -> Layer 6: Test Matrix
+  -> Layer 7: Performance
+  -> Layer 8: Security
+  -> Layer 9: Packaging
+  -> Layer 10: Release
 ```
 
-## Workflow Set
+## 2) Ten-Layer Workflow Catalog (44 Pipelines)
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `ci.yml` | PR + push | Fast quality checks, unit tests, package build |
-| `hpc-matrix.yml` | PR + push + nightly | Expanded matrix with PyTorch/CUDA compatibility checks |
-| `gpu-hardware.yml` | nightly + manual + release candidate | Hardware validation on self-hosted GPU runners |
-| `security.yml` | PR + push + weekly | SAST, dependency audit, secret scan |
-| `benchmark.yml` | PR + nightly | Performance baselines and regression thresholds |
-| `release.yml` | tags | Build, verify, and publish release artifacts |
-| `docs.yml` | docs changes + release | Build and publish documentation |
+### Layer 1 — Pre-commit Validation
 
-## Deterministic Build Strategy
+1. lint-python  
+2. lint-cpp  
+3. format-check  
+4. import-order-check  
+5. precommit-hooks  
+6. commit-message-lint  
+7. secrets-scan
 
-Determinism is enforced by:
+**Primary tools:** ruff, black, clang-format, pre-commit, commitlint, gitleaks.
 
-1. Pinning lock files and toolchain versions.
-2. Building wheels in isolated environments (`python -m build`).
-3. Verifying metadata (`twine check`).
-4. Capturing SBOM and provenance attestations.
+### Layer 2 — Static Code Analysis
 
-## Build Matrix Recommendation
+8. mypy-type-check  
+9. pylint-analysis  
+10. code-complexity-check  
+11. dead-code-detection  
+12. docstring-coverage  
+13. codeql-analysis
 
-| Axis | Values |
-|------|--------|
-| Python | 3.9, 3.10, 3.11, 3.12 |
-| PyTorch | Supported minor versions |
-| CUDA | 11.8, 12.1, 12.4 |
-| GPU arch | sm_80, sm_86, sm_89, sm_90 |
-| OS | ubuntu-latest, self-hosted GPU Linux |
+**Primary tools:** mypy, pylint, radon, vulture, codeql.
 
-## Validation Gates
+### Layer 3 — Dependency & Supply Chain
 
-### 1. Static Quality Gate
+14. dependency-vulnerability-scan  
+15. license-compliance  
+16. dependency-update-check  
+17. sbom-generation
 
-- `ruff check .`
-- `ruff format --check .`
-- `mypy kernels implementations`
+**Primary tools:** pip-audit, safety, syft, dependabot.
 
-### 2. Correctness Gate
+### Layer 4 — Build Matrix
 
-- Unit tests with coverage threshold.
-- Integration tests for runtime loading and fallback behavior.
-- Numerical equivalence checks against reference implementations.
+18. build-linux  
+19. build-macos  
+20. build-python-3.9  
+21. build-python-3.10  
+22. build-python-3.11  
+23. build-cuda-11  
+24. build-cuda-12
 
-### 3. Hardware Gate
+### Layer 5 — Kernel Compilation
 
-- Run kernel smoke tests on A100 / H100 / RTX-class runners.
-- Enforce CPU fallback tests in every PR.
+25. compile-cuda-kernels  
+26. compile-cpu-kernels  
+27. compile-ptx  
+28. compile-avx-optimizations
 
-### 4. Security Gate
+### Layer 6 — Testing
 
-- CodeQL
-- `pip-audit`
-- `safety`
-- `gitleaks`
-- Optional Semgrep policy pack
+29. unit-tests  
+30. integration-tests  
+31. api-contract-tests  
+32. gpu-runtime-tests  
+33. numerical-accuracy-tests  
+34. memory-safety-tests
 
-### 5. Performance Gate
+**Primary tools:** pytest, cuda-memcheck, ASAN, valgrind.
 
-- Pytest benchmark suite with historical comparison.
-- Fail CI if median latency regresses beyond threshold (default 5%).
+### Layer 7 — Performance
 
-## Release Controls
+35. benchmark-kernels  
+36. performance-regression-detection  
+37. latency-analysis  
+38. memory-bandwidth-tests
 
-Release jobs should execute only after all mandatory checks pass:
+**Primary tools:** pytest-benchmark, nvprof/nsight, Airspeed Velocity.
 
-- Lint / type / tests
-- Security scans
-- Benchmark regression check
-- Docs build
+### Layer 8 — Security
 
-On tag:
+39. container-vulnerability-scan  
+40. binary-vulnerability-scan  
+41. fuzz-testing
 
-1. Build source + wheel distributions.
-2. Generate SBOM (`syft`) and vulnerability report (`grype` or `trivy`).
-3. Publish to PyPI.
-4. Publish container image.
-5. Attach benchmark + security artifacts to GitHub release.
+**Primary tools:** trivy, grype, libFuzzer, hypothesis.
 
-## Rollback Policy
+### Layer 9 — Packaging
 
-If release validation fails for correctness or benchmark thresholds:
+42. build-python-wheels  
+43. build-docker-images
 
-- Mark release candidate as failed.
-- Prevent publication jobs from running.
-- Emit structured summary and incident artifact.
+### Layer 10 — Release
 
-## Scaling Guidance
+44. publish-release
 
-For large OSS adoption:
+**Primary outputs:** signed PyPI wheels, signed OCI images, compiled kernels,
+benchmark reports, SBOM + provenance attestations.
 
-- Split fast and slow workflows; protect PR latency.
-- Use distributed/self-hosted GPU pools by architecture label.
-- Cache Python deps, build layers, and benchmark baselines.
-- Nightly deep validation for expensive fuzz + hardware tests.
+## 3) Repository Layout Recommendation
+
+```text
+repo/
+├── kernels/
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── gpu/
+│   └── benchmarks/
+├── benchmarks/
+├── docker/
+├── scripts/
+├── .github/workflows/
+└── pyproject.toml
+```
+
+## 4) KERNELS Workflow Mapping
+
+The following files in this repository implement core parts of the architecture:
+
+| Existing workflow | Layer coverage | Notes |
+|---|---|---|
+| `.github/workflows/ci.yml` | 1, 2, 4, 6 | Fast lint/type/test/build gate |
+| `.github/workflows/hpc-matrix.yml` | 4, 5, 6 | Expanded Python/Torch/CUDA compatibility |
+| `.github/workflows/gpu-hardware.yml` | 5, 6, 7 | Hardware validation on self-hosted GPU runners |
+| `.github/workflows/security.yml` | 1, 2, 3, 8 | CodeQL, dependency review, secret scanning |
+| `.github/workflows/benchmark.yml` | 7 | Regression checks using benchmark artifacts |
+| `.github/workflows/dependency-health.yml` | 3 | Dependency graph and vulnerability health |
+| `.github/workflows/dependency-canary.yml` | 3, 4 | Canary runs against latest dependencies |
+| `.github/workflows/release.yml` | 9, 10 | Build + publish releases |
+| `.github/workflows/docs.yml` | release support | Documentation validation and publication |
+
+## 5) Performance Regression Gate
+
+Use artifact-backed baseline comparison:
+
+1. Store a baseline benchmark artifact from `main`.
+2. Run PR benchmarks on the same hardware class.
+3. Compare with a fixed threshold (default: 5% slowdown).
+4. Fail PR when threshold is exceeded.
+
+## 6) Hardware Validation Strategy
+
+Recommended dedicated GPU runner pools:
+
+- Self-hosted RTX 4090
+- Self-hosted A100
+- Self-hosted H100
+
+Alternative cloud-backed runner pools:
+
+- RunPod
+- Lambda Labs
+- GCP GPU nodes
+
+## 7) Scaling Guidance for Large Projects
+
+- Cache aggressively: Python deps, build outputs, ccache, benchmark baselines.
+- Shard expensive tests across runners.
+- Keep PR checks fast; move deep validation to nightly/release candidates.
+- Use reusable workflows to avoid duplication across matrix dimensions.
+
+## 8) Security Hardening Controls
+
+- Signed commits + signed tags.
+- SBOM generation per build.
+- Artifact signing with Sigstore/Cosign.
+- SLSA provenance attestations for release bundles.
+
+## 9) Coverage Policy
+
+Recommended minimum gate:
+
+```bash
+pytest --cov=kernels --cov=implementations --cov-fail-under=85
+```
+
+Raise the threshold for critical packages over time as flaky suites are removed.
+
+## 10) Advanced Optional Pipelines
+
+For kernel-heavy production systems, add:
+
+- Kernel fuzzing
+- PTX verification
+- ABI compatibility tests
+- GPU driver compatibility matrix
+- Binary reproducibility checks
