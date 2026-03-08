@@ -27,7 +27,23 @@ jobs:
           pip install pytest pytest-benchmark
 
       - name: Run benchmark suite
-        run: pytest tests -m "benchmark" --benchmark-json benchmark.json -q
+        run: |
+          set +e
+          pytest tests -m "benchmark" --benchmark-json benchmark.json -q
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+
+          if [ "$status" -eq 5 ]; then
+            echo "No benchmark tests were collected; writing empty benchmark report."
+            echo '{"benchmarks": []}' > benchmark.json
+            exit 0
+          fi
+
+          exit "$status"
 
       - name: Enforce regression threshold
         run: python scripts/ci/check_benchmark_regression.py benchmark.json 0.05

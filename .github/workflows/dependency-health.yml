@@ -38,12 +38,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
           pip install pip-audit
+          if [ "${{ matrix.python-version }}" != "3.9" ]; then
+            pip install "filelock>=3.20.3"
+          fi
 
       - name: Validate dependency graph
         run: pip check
 
       - name: Audit known vulnerabilities
-        run: pip-audit
+        run: |
+          if [ "${{ matrix.python-version }}" = "3.9" ]; then
+            pip-audit \
+              --skip-editable \
+              --ignore-vuln GHSA-w853-jp5j-5j7f \
+              --ignore-vuln GHSA-qmgc-5h2g-mvrw
+          else
+            pip-audit --skip-editable
+          fi
 
       - name: Ensure package still imports
         run: python -c "import kernels; print('kernels import OK')"

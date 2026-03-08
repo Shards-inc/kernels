@@ -81,7 +81,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v1
         env:
           # Optional: set as a repository/org secret for licensed scans.
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
