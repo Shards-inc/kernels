@@ -154,6 +154,18 @@ Use artifact-backed baseline comparison:
 3. Compare with a fixed threshold (default: 5% slowdown).
 4. Fail PR when threshold is exceeded.
 
+The 5% slowdown value is intended as a conservative default that works well for many
+numerical and GPU/CPU kernel workloads where benchmark noise is typically low but
+non-zero. Projects SHOULD tune this threshold based on:
+
+- The inherent variance of each benchmark (e.g., noisy integration tests may need a higher tolerance).
+- The business and latency criticality of the kernel (e.g., low-latency paths may warrant a stricter threshold).
+- The stability of the underlying hardware and environment (e.g., shared/cloud GPUs vs. dedicated machines).
+
+In practice, configure the threshold as a parameter in your CI (per-suite or per-benchmark)
+rather than hard-coding 5% globally, and document the chosen values and rationale in
+the repository (e.g., in `CONTRIBUTING.md` or a benchmarking README).
+
 ## 6) Hardware Validation Strategy
 
 Recommended dedicated GPU runner pools:
