@@ -187,7 +187,7 @@ Alternative cloud-backed runner pools:
 Recommended minimum gate:
 
 ```bash
-pytest --cov=kernels --cov=implementations --cov-fail-under=85
+pytest --cov=kernels --cov-fail-under=85
 ```
 
 Raise the threshold for critical packages over time as flaky suites are removed.
