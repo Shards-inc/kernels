@@ -38,7 +38,9 @@ def test_variant(kernel, variant_name: str, requests: list) -> None:
         print(f"  Decision: {receipt.decision.value}")
         print(f"  Status: {receipt.status.value}")
         if receipt.error:
-            error_preview = receipt.error[:60] + "..." if len(receipt.error) > 60 else receipt.error
+            error_preview = (
+                receipt.error[:60] + "..." if len(receipt.error) > 60 else receipt.error
+            )
             print(f"  Error: {error_preview}")
         if receipt.tool_result is not None:
             print(f"  Result: {receipt.tool_result}")
@@ -102,34 +104,50 @@ def main() -> None:
     # Test Strict Kernel
     strict = StrictKernel()
     strict.boot(make_config("strict-001", "strict"))
-    test_variant(strict, "Strict Kernel", [
-        intent_only_request,
-        tool_request,
-    ])
+    test_variant(
+        strict,
+        "Strict Kernel",
+        [
+            intent_only_request,
+            tool_request,
+        ],
+    )
 
     # Test Permissive Kernel
     permissive = PermissiveKernel()
     permissive.boot(make_config("permissive-001", "permissive"))
-    test_variant(permissive, "Permissive Kernel", [
-        intent_only_request,
-        tool_request,
-    ])
+    test_variant(
+        permissive,
+        "Permissive Kernel",
+        [
+            intent_only_request,
+            tool_request,
+        ],
+    )
 
     # Test Evidence-First Kernel
     evidence_first = EvidenceFirstKernel()
     evidence_first.boot(make_config("evidence-001", "evidence-first"))
-    test_variant(evidence_first, "Evidence-First Kernel", [
-        intent_only_request,  # Should fail (no evidence)
-        evidence_request,     # Should pass (has evidence)
-    ])
+    test_variant(
+        evidence_first,
+        "Evidence-First Kernel",
+        [
+            intent_only_request,  # Should fail (no evidence)
+            evidence_request,  # Should pass (has evidence)
+        ],
+    )
 
     # Test Dual-Channel Kernel
     dual_channel = DualChannelKernel()
     dual_channel.boot(make_config("dual-001", "dual-channel"))
-    test_variant(dual_channel, "Dual-Channel Kernel", [
-        intent_only_request,    # Should fail (no constraints)
-        constraints_request,    # Should pass (has constraints)
-    ])
+    test_variant(
+        dual_channel,
+        "Dual-Channel Kernel",
+        [
+            intent_only_request,  # Should fail (no constraints)
+            constraints_request,  # Should pass (has constraints)
+        ],
+    )
 
     # Summary
     print("\n" + "=" * 60)

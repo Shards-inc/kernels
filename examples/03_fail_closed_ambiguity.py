@@ -81,7 +81,9 @@ def main() -> None:
     for case in test_cases:
         print(f"\n[{case['name']}]")
         request = case["request"]
-        print(f"  Intent: {repr(request.intent[:50])}{'...' if len(request.intent) > 50 else ''}")
+        print(
+            f"  Intent: {repr(request.intent[:50])}{'...' if len(request.intent) > 50 else ''}"
+        )
 
         receipt = kernel.submit(request)
 
@@ -98,12 +100,8 @@ def main() -> None:
     print(f"Total audit entries: {len(evidence.ledger_entries)}")
 
     # Count decisions
-    allow_count = sum(
-        1 for e in evidence.ledger_entries if e.decision.value == "ALLOW"
-    )
-    deny_count = sum(
-        1 for e in evidence.ledger_entries if e.decision.value == "DENY"
-    )
+    allow_count = sum(1 for e in evidence.ledger_entries if e.decision.value == "ALLOW")
+    deny_count = sum(1 for e in evidence.ledger_entries if e.decision.value == "DENY")
     print(f"ALLOW decisions: {allow_count}")
     print(f"DENY decisions: {deny_count}")
 

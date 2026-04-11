@@ -26,14 +26,14 @@ def replay_and_verify(
     expected_root_hash: str | None = None,
 ) -> tuple[bool, list[str]]:
     """Replay and verify an audit ledger.
-    
+
     Recomputes the hash chain from the entries and verifies that each
     entry's hash matches the computed value.
-    
+
     Args:
         entries: List of audit entry dictionaries.
         expected_root_hash: Optional expected root hash to verify against.
-        
+
     Returns:
         Tuple of (is_valid, list of error messages).
     """
@@ -92,10 +92,10 @@ def replay_and_verify(
 
 def verify_evidence_bundle(bundle: dict[str, Any]) -> ReplayResult:
     """Verify an evidence bundle.
-    
+
     Args:
         bundle: Evidence bundle dictionary with ledger_entries and root_hash.
-        
+
     Returns:
         ReplayResult with verification outcome.
     """

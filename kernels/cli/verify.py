@@ -22,16 +22,17 @@ import json
 import sys
 import argparse
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 from pathlib import Path
 
 # KERNELS imports
-from kernels.common.hashing import compute_chain_hash, genesis_hash
+from kernels.common.hashing import genesis_hash
 
 
 @dataclass
 class VerificationResult:
     """Result of evidence verification."""
+
     passed: bool
     checks_total: int
     checks_passed: int
@@ -219,12 +220,13 @@ class EvidenceVerifier:
             True if enforcement is correct
         """
         has_permit_system = any(
-            entry.get("permit_verification") is not None
-            for entry in self.entries
+            entry.get("permit_verification") is not None for entry in self.entries
         )
 
         if not has_permit_system:
-            self.warnings.append("No permit enforcement detected (keyring not configured)")
+            self.warnings.append(
+                "No permit enforcement detected (keyring not configured)"
+            )
             return True
 
         for i, entry in enumerate(self.entries):
@@ -337,15 +339,19 @@ class EvidenceVerifier:
             1 for e in self.entries if e.get("permit_verification") == "DENY"
         )
         missing_permits = sum(
-            1 for e in self.entries
+            1
+            for e in self.entries
             if "MISSING_PERMIT" in (e.get("permit_denial_reasons") or [])
         )
         replay_detected = sum(
-            1 for e in self.entries
+            1
+            for e in self.entries
             if "REPLAY_DETECTED" in (e.get("permit_denial_reasons") or [])
         )
 
-        tools_executed = [e.get("tool_name") for e in self.entries if e.get("tool_name")]
+        tools_executed = [
+            e.get("tool_name") for e in self.entries if e.get("tool_name")
+        ]
         unique_tools = set(tools_executed)
 
         self.stats = {
@@ -357,12 +363,17 @@ class EvidenceVerifier:
                 "missing": missing_permits,
                 "replay_detected": replay_detected,
             },
-            "tool_executions": {"total": len(tools_executed), "unique": len(unique_tools)},
+            "tool_executions": {
+                "total": len(tools_executed),
+                "unique": len(unique_tools),
+            },
             "unique_tools": sorted(unique_tools),
         }
 
 
-def verify_evidence(evidence: Dict[str, Any], detailed: bool = False) -> VerificationResult:
+def verify_evidence(
+    evidence: Dict[str, Any], detailed: bool = False
+) -> VerificationResult:
     """
     Verify evidence bundle.
 
@@ -448,7 +459,7 @@ def print_verification_result(
     print(f"  Permit Verification: {result.stats['permit_verification']}")
     print(f"  Tool Executions: {result.stats['tool_executions']}")
 
-    if result.stats['unique_tools']:
+    if result.stats["unique_tools"]:
         print(f"  Unique Tools: {', '.join(result.stats['unique_tools'])}")
     print()
 

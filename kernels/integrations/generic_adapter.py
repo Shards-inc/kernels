@@ -26,7 +26,7 @@ from __future__ import annotations
 import uuid
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Callable, Union
+from typing import Any, Dict, Optional, Callable
 
 from kernels.common.types import KernelRequest, ToolCall, Decision
 from kernels.variants.base import BaseKernel
@@ -38,6 +38,7 @@ from kernels.common.errors import PermitError
 @dataclass
 class ToolExecutionResult:
     """Generic result from governed tool execution."""
+
     tool_name: str
     result: Any
     was_allowed: bool
@@ -256,6 +257,7 @@ class GenericAdapter:
             # Function now requires permit
             send_email(to="user@example.com", permit_token=permit)
         """
+
         def decorator(func: Callable) -> Callable:
             return self.create_wrapper(name, func, description, raise_on_deny)
 
@@ -310,9 +312,11 @@ def create_generic_adapter(
         kernel = StrictKernel()
     elif variant == "permissive":
         from kernels.variants.permissive_kernel import PermissiveKernel
+
         kernel = PermissiveKernel()
     elif variant == "evidence-first":
         from kernels.variants.evidence_first_kernel import EvidenceFirstKernel
+
         kernel = EvidenceFirstKernel()
     else:
         raise ValueError(f"Unknown variant: {variant}")
@@ -330,6 +334,7 @@ def create_generic_adapter(
 # ============================================================================
 # Example Framework-Specific Adapters
 # ============================================================================
+
 
 class MoltbookAdapter(GenericAdapter):
     """

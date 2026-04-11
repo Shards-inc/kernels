@@ -11,12 +11,12 @@ from kernels.common.codec import serialize_deterministic
 
 def validate_request(request: KernelRequest) -> list[str]:
     """Validate a kernel request structure.
-    
+
     Checks that all required fields are present and correctly typed.
-    
+
     Args:
         request: The request to validate.
-        
+
     Returns:
         List of validation error messages. Empty if valid.
     """
@@ -56,10 +56,10 @@ def validate_request(request: KernelRequest) -> list[str]:
 
 def validate_tool_call(tool_call: ToolCall | dict[str, Any]) -> list[str]:
     """Validate a tool call structure.
-    
+
     Args:
         tool_call: The tool call to validate.
-        
+
     Returns:
         List of validation error messages. Empty if valid.
     """
@@ -90,15 +90,15 @@ def check_ambiguity(
     strict: bool = True,
 ) -> list[str]:
     """Check request for ambiguity indicators.
-    
+
     Ambiguity heuristics detect requests that cannot be unambiguously
     interpreted. In strict mode, more conditions trigger ambiguity.
-    
+
     Args:
         request: The request to check.
         max_intent_length: Maximum allowed intent length.
         strict: Whether to use strict ambiguity checking.
-        
+
     Returns:
         List of ambiguity error messages. Empty if unambiguous.
     """
@@ -132,11 +132,11 @@ def check_param_size(
     max_bytes: int = 65536,
 ) -> bool:
     """Check if serialized params exceed maximum size.
-    
+
     Args:
         params: Parameters dictionary to check.
         max_bytes: Maximum allowed size in bytes.
-        
+
     Returns:
         True if within limits, False if exceeds.
     """

@@ -5,7 +5,6 @@ Rules return error messages if violated, or an empty list if passed.
 """
 
 from dataclasses import dataclass
-from typing import Any
 
 from kernels.common.types import KernelRequest, ToolCall
 from kernels.common.codec import serialize_deterministic
@@ -20,13 +19,15 @@ class PolicyResult:
     violations: list[str]
 
 
-def check_actor_allowed(request: KernelRequest, policy: JurisdictionPolicy) -> list[str]:
+def check_actor_allowed(
+    request: KernelRequest, policy: JurisdictionPolicy
+) -> list[str]:
     """Check if the request actor is allowed by policy.
-    
+
     Args:
         request: The request to check.
         policy: The policy to evaluate against.
-        
+
     Returns:
         List of violation messages. Empty if allowed.
     """
@@ -37,11 +38,11 @@ def check_actor_allowed(request: KernelRequest, policy: JurisdictionPolicy) -> l
 
 def check_tool_allowed(request: KernelRequest, policy: JurisdictionPolicy) -> list[str]:
     """Check if the request tool is allowed by policy.
-    
+
     Args:
         request: The request to check.
         policy: The policy to evaluate against.
-        
+
     Returns:
         List of violation messages. Empty if allowed.
     """
@@ -62,13 +63,15 @@ def check_tool_allowed(request: KernelRequest, policy: JurisdictionPolicy) -> li
     return []
 
 
-def check_required_fields(request: KernelRequest, policy: JurisdictionPolicy) -> list[str]:
+def check_required_fields(
+    request: KernelRequest, policy: JurisdictionPolicy
+) -> list[str]:
     """Check if all required fields are present in the request.
-    
+
     Args:
         request: The request to check.
         policy: The policy to evaluate against.
-        
+
     Returns:
         List of violation messages. Empty if all fields present.
     """
@@ -91,11 +94,11 @@ def check_required_fields(request: KernelRequest, policy: JurisdictionPolicy) ->
 
 def check_param_size(request: KernelRequest, policy: JurisdictionPolicy) -> list[str]:
     """Check if request parameters are within size limits.
-    
+
     Args:
         request: The request to check.
         policy: The policy to evaluate against.
-        
+
     Returns:
         List of violation messages. Empty if within limits.
     """
@@ -116,13 +119,15 @@ def check_param_size(request: KernelRequest, policy: JurisdictionPolicy) -> list
     return []
 
 
-def check_intent_length(request: KernelRequest, policy: JurisdictionPolicy) -> list[str]:
+def check_intent_length(
+    request: KernelRequest, policy: JurisdictionPolicy
+) -> list[str]:
     """Check if intent length is within limits.
-    
+
     Args:
         request: The request to check.
         policy: The policy to evaluate against.
-        
+
     Returns:
         List of violation messages. Empty if within limits.
     """
@@ -136,10 +141,10 @@ def check_intent_length(request: KernelRequest, policy: JurisdictionPolicy) -> l
 
 def check_tool_call_structure(request: KernelRequest) -> list[str]:
     """Check if tool call structure is valid.
-    
+
     Args:
         request: The request to check.
-        
+
     Returns:
         List of violation messages. Empty if valid.
     """
@@ -168,11 +173,11 @@ def evaluate_policy(
     policy: JurisdictionPolicy,
 ) -> PolicyResult:
     """Evaluate all policy rules against a request.
-    
+
     Args:
         request: The request to evaluate.
         policy: The policy to evaluate against.
-        
+
     Returns:
         PolicyResult with allowed status and any violations.
     """

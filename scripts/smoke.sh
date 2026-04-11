@@ -45,7 +45,12 @@ PY
 echo ""
 echo "[7/7] Exercising SQLite audit storage..."
 python3 - <<'PY'
+from pathlib import Path
 from implementations.storage import SQLiteAuditStorage
+
+db_path = Path(".tmp/smoke/audit.db")
+if db_path.exists():
+    db_path.unlink()
 
 entry = {
     "ledger_seq": 1,
@@ -60,7 +65,7 @@ entry = {
     "state_to": "approved",
 }
 
-storage = SQLiteAuditStorage(".tmp/smoke/audit.db")
+storage = SQLiteAuditStorage(str(db_path))
 storage.append("kernel-smoke", entry)
 print("Storage health:", storage.health())
 assert storage.list_entries("kernel-smoke")[0]["request_id"] == "req-1"

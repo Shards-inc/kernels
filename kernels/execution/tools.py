@@ -22,7 +22,7 @@ class Tool:
 
 class ToolRegistry:
     """Registry of available tools.
-    
+
     Tools must be explicitly registered. The registry does not perform
     dynamic discovery or import-by-name.
     """
@@ -39,13 +39,13 @@ class ToolRegistry:
         param_schema: Optional[dict[str, type]] = None,
     ) -> None:
         """Register a tool.
-        
+
         Args:
             name: Unique tool name.
             handler: Function to invoke for this tool.
             description: Human-readable description.
             param_schema: Dictionary mapping parameter names to types.
-            
+
         Raises:
             ToolError: If tool name is already registered.
         """
@@ -61,10 +61,10 @@ class ToolRegistry:
 
     def unregister(self, name: str) -> None:
         """Unregister a tool.
-        
+
         Args:
             name: Tool name to unregister.
-            
+
         Raises:
             ToolError: If tool is not registered.
         """
@@ -74,10 +74,10 @@ class ToolRegistry:
 
     def get(self, name: str) -> Optional[Tool]:
         """Get a tool by name.
-        
+
         Args:
             name: Tool name.
-            
+
         Returns:
             Tool if found, None otherwise.
         """
@@ -85,10 +85,10 @@ class ToolRegistry:
 
     def has(self, name: str) -> bool:
         """Check if a tool is registered.
-        
+
         Args:
             name: Tool name.
-            
+
         Returns:
             True if registered, False otherwise.
         """
@@ -96,7 +96,7 @@ class ToolRegistry:
 
     def list_tools(self) -> list[str]:
         """List all registered tool names.
-        
+
         Returns:
             List of tool names.
         """
@@ -104,14 +104,14 @@ class ToolRegistry:
 
     def invoke(self, name: str, params: dict[str, Any]) -> Any:
         """Invoke a tool with parameters.
-        
+
         Args:
             name: Tool name.
             params: Parameters to pass to the tool.
-            
+
         Returns:
             Tool execution result.
-            
+
         Raises:
             ToolError: If tool not found or execution fails.
         """
@@ -129,7 +129,7 @@ class ToolRegistry:
 
 def create_default_registry() -> ToolRegistry:
     """Create a registry with built-in tools.
-    
+
     Returns:
         ToolRegistry with echo and add tools registered.
     """

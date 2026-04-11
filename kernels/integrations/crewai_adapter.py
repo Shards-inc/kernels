@@ -47,14 +47,18 @@ import uuid
 try:
     from crewai.tools import BaseTool
     from pydantic import BaseModel, Field
+
     CREWAI_AVAILABLE = True
 except ImportError:
     CREWAI_AVAILABLE = False
+
     # Define stubs for type hints
     class BaseTool:  # type: ignore
         pass
+
     class BaseModel:  # type: ignore
         pass
+
 
 # KERNELS imports
 from kernels.common.types import (
@@ -156,14 +160,26 @@ class GovernedCrewAITool(BaseTool if CREWAI_AVAILABLE else object):
                 continue
 
             # Determine type annotation
-            param_type = param.annotation if param.annotation != inspect.Parameter.empty else str
+            param_type = (
+                param.annotation if param.annotation != inspect.Parameter.empty else str
+            )
 
             # Create Field
-            fields[param_name] = (param_type, Field(description=f"Parameter: {param_name}"))
+            fields[param_name] = (
+                param_type,
+                Field(description=f"Parameter: {param_name}"),
+            )
 
         # Create dynamic Pydantic model
         schema_name = f"{self.name}Input"
-        return type(schema_name, (BaseModel,), {"__annotations__": {k: v[0] for k, v in fields.items()}, **{k: v[1] for k, v in fields.items()}})
+        return type(
+            schema_name,
+            (BaseModel,),
+            {
+                "__annotations__": {k: v[0] for k, v in fields.items()},
+                **{k: v[1] for k, v in fields.items()},
+            },
+        )
 
     def _run(self, permit_token: Optional[PermitToken] = None, **kwargs) -> str:
         """

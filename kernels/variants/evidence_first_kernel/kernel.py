@@ -12,7 +12,7 @@ from kernels.variants.base import BaseKernel
 
 class EvidenceFirstKernel(BaseKernel):
     """Evidence-first kernel requiring evidence for all allowed operations.
-    
+
     This variant:
     - Requires the evidence field to be present for ALLOW decisions
     - Denies requests missing evidence

@@ -96,7 +96,9 @@ class AuditEntry:
     permit_nonce: Optional[str] = None  # For ledger-backed replay protection
     permit_issuer: Optional[str] = None  # Issuer identity for nonce reconstruction
     permit_subject: Optional[str] = None  # Subject identity for nonce reconstruction
-    permit_max_executions: Optional[int] = None  # Max executions for nonce reconstruction
+    permit_max_executions: Optional[int] = (
+        None  # Max executions for nonce reconstruction
+    )
 
 
 @dataclass(frozen=True)

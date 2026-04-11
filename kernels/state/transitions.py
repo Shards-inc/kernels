@@ -11,35 +11,43 @@ from kernels.common.types import KernelState
 ALLOWED_TRANSITIONS: dict[KernelState, frozenset[KernelState]] = {
     KernelState.BOOTING: frozenset({KernelState.IDLE, KernelState.HALTED}),
     KernelState.IDLE: frozenset({KernelState.VALIDATING, KernelState.HALTED}),
-    KernelState.VALIDATING: frozenset({
-        KernelState.ARBITRATING,
-        KernelState.AUDITING,  # For validation failures
-        KernelState.HALTED,
-    }),
-    KernelState.ARBITRATING: frozenset({
-        KernelState.EXECUTING,
-        KernelState.AUDITING,  # For denied requests
-        KernelState.HALTED,
-    }),
-    KernelState.EXECUTING: frozenset({
-        KernelState.AUDITING,
-        KernelState.HALTED,
-    }),
-    KernelState.AUDITING: frozenset({
-        KernelState.IDLE,
-        KernelState.HALTED,
-    }),
+    KernelState.VALIDATING: frozenset(
+        {
+            KernelState.ARBITRATING,
+            KernelState.AUDITING,  # For validation failures
+            KernelState.HALTED,
+        }
+    ),
+    KernelState.ARBITRATING: frozenset(
+        {
+            KernelState.EXECUTING,
+            KernelState.AUDITING,  # For denied requests
+            KernelState.HALTED,
+        }
+    ),
+    KernelState.EXECUTING: frozenset(
+        {
+            KernelState.AUDITING,
+            KernelState.HALTED,
+        }
+    ),
+    KernelState.AUDITING: frozenset(
+        {
+            KernelState.IDLE,
+            KernelState.HALTED,
+        }
+    ),
     KernelState.HALTED: frozenset(),  # Terminal state, no transitions allowed
 }
 
 
 def can_transition(from_state: KernelState, to_state: KernelState) -> bool:
     """Check if a transition is allowed.
-    
+
     Args:
         from_state: Current state.
         to_state: Target state.
-        
+
     Returns:
         True if transition is allowed, False otherwise.
     """
@@ -49,10 +57,10 @@ def can_transition(from_state: KernelState, to_state: KernelState) -> bool:
 
 def get_next_states(state: KernelState) -> frozenset[KernelState]:
     """Get all states reachable from the given state.
-    
+
     Args:
         state: Current state.
-        
+
     Returns:
         Frozenset of reachable states.
     """
@@ -61,10 +69,10 @@ def get_next_states(state: KernelState) -> frozenset[KernelState]:
 
 def is_terminal(state: KernelState) -> bool:
     """Check if a state is terminal (no outgoing transitions).
-    
+
     Args:
         state: State to check.
-        
+
     Returns:
         True if terminal, False otherwise.
     """
@@ -73,10 +81,10 @@ def is_terminal(state: KernelState) -> bool:
 
 def validate_transition_path(path: list[KernelState]) -> tuple[bool, str | None]:
     """Validate a sequence of state transitions.
-    
+
     Args:
         path: List of states representing a transition path.
-        
+
     Returns:
         Tuple of (is_valid, error_message or None).
     """

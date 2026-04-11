@@ -25,7 +25,7 @@ import json
 # KERNELS imports
 from kernels.common.types import KernelConfig, VirtualClock
 from kernels.variants.strict_kernel import StrictKernel
-from kernels.integrations.langchain_adapter import LangChainAdapter, GovernedTool
+from kernels.integrations.langchain_adapter import LangChainAdapter
 from kernels.permits import PermitBuilder
 
 # Simulate LangChain (these would normally be from langchain imports)
@@ -35,18 +35,26 @@ from kernels.permits import PermitBuilder
 class SimulatedLLM:
     """Simulated LLM that decides which tools to call."""
 
-    def decide_action(self, user_query: str, available_tools: list[str]) -> Dict[str, Any]:
+    def decide_action(
+        self, user_query: str, available_tools: list[str]
+    ) -> Dict[str, Any]:
         """Simple rule-based decision (in real LangChain, this would be LLM-powered)."""
         if "email" in user_query.lower():
-            return {"tool": "send_email", "params": {
-                "to": "customer@example.com",
-                "subject": "Refund processed",
-                "body": "Your refund of $50 has been processed.",
-            }}
+            return {
+                "tool": "send_email",
+                "params": {
+                    "to": "customer@example.com",
+                    "subject": "Refund processed",
+                    "body": "Your refund of $50 has been processed.",
+                },
+            }
         elif "database" in user_query.lower() or "data" in user_query.lower():
-            return {"tool": "database_query", "params": {
-                "query": "SELECT * FROM customers WHERE email = 'customer@example.com'",
-            }}
+            return {
+                "tool": "database_query",
+                "params": {
+                    "query": "SELECT * FROM customers WHERE email = 'customer@example.com'",
+                },
+            }
         elif "search" in user_query.lower():
             return {"tool": "search_kb", "params": {"query": user_query}}
         elif "refund" in user_query.lower() or "calculate" in user_query.lower():
@@ -58,6 +66,7 @@ class SimulatedLLM:
 # ============================================================================
 # Tool Implementations (these would be real functions in production)
 # ============================================================================
+
 
 def search_knowledge_base(query: str) -> str:
     """Search internal knowledge base. Safe operation."""
@@ -82,7 +91,7 @@ def send_email(to: str, subject: str, body: str) -> str:
     In production, this would actually send email via SMTP/SES/etc.
     This is the kind of tool that caused the "47 emails" incident.
     """
-    print(f"\n🚨 EMAIL SENT:")
+    print("\n🚨 EMAIL SENT:")
     print(f"   To: {to}")
     print(f"   Subject: {subject}")
     print(f"   Body: {body}\n")
@@ -95,7 +104,7 @@ def database_query(query: str) -> Dict[str, Any]:
 
     In production, could leak PII or modify data.
     """
-    print(f"\n🚨 DATABASE QUERY EXECUTED:")
+    print("\n🚨 DATABASE QUERY EXECUTED:")
     print(f"   Query: {query}\n")
     return {
         "rows": [
@@ -108,6 +117,7 @@ def database_query(query: str) -> Dict[str, Any]:
 # ============================================================================
 # Main Example
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -178,7 +188,7 @@ def main():
         require_permit=True,  # DANGEROUS
     )
 
-    db_tool = adapter.wrap_tool(
+    adapter.wrap_tool(
         "database_query",
         database_query,
         description="Query customer database",
@@ -246,12 +256,17 @@ def main():
     # Operator creates and signs a permit
     builder = PermitBuilder()
     email_permit = (
-        builder
-        .issuer("operator@company.com")
+        builder.issuer("operator@company.com")
         .subject("support-agent-v1")  # Must match actor
         .jurisdiction("default")  # Must match kernel jurisdiction
         .action("send_email")  # Must match tool name
-        .params({"to": "customer@example.com", "subject": "Refund processed", "body": "Your refund of $50 has been processed."})  # Must match exact params
+        .params(
+            {
+                "to": "customer@example.com",
+                "subject": "Refund processed",
+                "body": "Your refund of $50 has been processed.",
+            }
+        )  # Must match exact params
         .constraints({"max_time_ms": 5000})
         .max_executions(1)  # Single-use permit
         .valid_from_ms(0)
@@ -321,21 +336,21 @@ def main():
 
     evidence = adapter.export_evidence()
 
-    print(f"✓ Audit trail exported:")
+    print("✓ Audit trail exported:")
     print(f"  Kernel: {evidence['kernel_id']}")
     print(f"  Total entries: {evidence['entry_count']}")
     print(f"  Root hash: {evidence['root_hash'][:16]}...")
     print()
 
     print("Audit entries:")
-    for i, entry in enumerate(evidence['entries'], 1):
-        decision_str = entry['decision']
-        tool = entry.get('tool_name', 'N/A')
-        permit_status = entry.get('permit_verification', 'N/A')
+    for i, entry in enumerate(evidence["entries"], 1):
+        decision_str = entry["decision"]
+        tool = entry.get("tool_name", "N/A")
+        permit_status = entry.get("permit_verification", "N/A")
 
         print(f"  {i}. [{decision_str}] {tool}")
         print(f"     Permit: {permit_status}")
-        if entry.get('permit_denial_reasons'):
+        if entry.get("permit_denial_reasons"):
             print(f"     Denial: {', '.join(entry['permit_denial_reasons'])}")
         print(f"     Hash: {entry['entry_hash'][:16]}...")
         print()
@@ -369,7 +384,7 @@ def main():
         json.dump(evidence, f, indent=2)
 
     print()
-    print(f"Full audit trail saved to: /tmp/agent_audit.json")
+    print("Full audit trail saved to: /tmp/agent_audit.json")
     print()
 
 

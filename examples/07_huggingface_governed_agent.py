@@ -34,6 +34,7 @@ from kernels.permits import PermitBuilder
 # Tool Implementations
 # ============================================================================
 
+
 def web_search(query: str) -> str:
     """Search the web. Safe operation."""
     return f"Web results for '{query}': Found 5 articles about AI governance."
@@ -73,6 +74,7 @@ def access_filesystem(path: str, operation: str) -> str:
 # ============================================================================
 # Main Example
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -193,8 +195,7 @@ def main():
     # Operator creates and signs a permit
     builder = PermitBuilder()
     code_permit = (
-        builder
-        .issuer("operator@research-lab.com")
+        builder.issuer("operator@research-lab.com")
         .subject("research-agent-v1")
         .jurisdiction("default")
         .action("execute_python_code")
@@ -280,10 +281,10 @@ def main():
     print()
 
     print("Audit summary:")
-    for i, entry in enumerate(evidence['entries'], 1):
-        decision = entry['decision']
-        tool = entry.get('tool_name', 'N/A')
-        permit_status = entry.get('permit_verification', 'N/A')
+    for i, entry in enumerate(evidence["entries"], 1):
+        decision = entry["decision"]
+        tool = entry.get("tool_name", "N/A")
+        permit_status = entry.get("permit_verification", "N/A")
 
         print(f"  {i}. [{decision}] {tool} (Permit: {permit_status})")
 

@@ -12,14 +12,14 @@ from kernels.common.codec import serialize_deterministic
 
 def compute_hash(data: bytes, algorithm: str = "sha256") -> str:
     """Compute hash of raw bytes.
-    
+
     Args:
         data: Raw bytes to hash.
         algorithm: Hash algorithm to use. Only "sha256" is supported.
-        
+
     Returns:
         Hexadecimal string representation of the hash.
-        
+
     Raises:
         ValueError: If unsupported algorithm is specified.
     """
@@ -30,11 +30,11 @@ def compute_hash(data: bytes, algorithm: str = "sha256") -> str:
 
 def compute_hash_str(text: str, algorithm: str = "sha256") -> str:
     """Compute hash of a string.
-    
+
     Args:
         text: String to hash.
         algorithm: Hash algorithm to use.
-        
+
     Returns:
         Hexadecimal string representation of the hash.
     """
@@ -43,14 +43,14 @@ def compute_hash_str(text: str, algorithm: str = "sha256") -> str:
 
 def compute_hash_dict(data: dict[str, Any], algorithm: str = "sha256") -> str:
     """Compute hash of a dictionary with deterministic serialization.
-    
+
     The dictionary is serialized with sorted keys to ensure consistent
     hashing across different Python implementations and versions.
-    
+
     Args:
         data: Dictionary to hash.
         algorithm: Hash algorithm to use.
-        
+
     Returns:
         Hexadecimal string representation of the hash.
     """
@@ -58,16 +58,18 @@ def compute_hash_dict(data: dict[str, Any], algorithm: str = "sha256") -> str:
     return compute_hash(serialized.encode("utf-8"), algorithm)
 
 
-def compute_chain_hash(prev_hash: str, entry_data: str, algorithm: str = "sha256") -> str:
+def compute_chain_hash(
+    prev_hash: str, entry_data: str, algorithm: str = "sha256"
+) -> str:
     """Compute hash for a chain entry.
-    
+
     Combines the previous hash with entry data to create a chain link.
-    
+
     Args:
         prev_hash: Hash of the previous entry in the chain.
         entry_data: Serialized data for the current entry.
         algorithm: Hash algorithm to use.
-        
+
     Returns:
         Hexadecimal string representation of the chained hash.
     """
@@ -77,7 +79,7 @@ def compute_chain_hash(prev_hash: str, entry_data: str, algorithm: str = "sha256
 
 def genesis_hash() -> str:
     """Return the genesis hash for the start of a chain.
-    
+
     Returns:
         A fixed hash value representing the start of the chain.
     """

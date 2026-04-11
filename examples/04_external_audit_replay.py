@@ -14,7 +14,7 @@ from kernels.common.types import (
     VirtualClock,
 )
 from kernels.variants.strict_kernel import StrictKernel
-from kernels.audit.replay import replay_and_verify, verify_evidence_bundle
+from kernels.audit.replay import verify_evidence_bundle
 from kernels.common.codec import audit_entry_to_dict
 
 

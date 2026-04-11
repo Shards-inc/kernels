@@ -15,12 +15,11 @@ from kernels.common.types import (
     Decision,
     KernelConfig,
     KernelRequest,
-    KernelState,
     ReceiptStatus,
     ToolCall,
     VirtualClock,
 )
-from kernels.permits import PermitBuilder, NonceRegistry
+from kernels.permits import PermitBuilder
 from kernels.variants.strict_kernel import StrictKernel
 from kernels.variants.permissive_kernel import PermissiveKernel
 from kernels.variants.evidence_first_kernel import EvidenceFirstKernel
@@ -444,7 +443,9 @@ class TestPermitIntegrationCrossRestart(unittest.TestCase):
         self.assertEqual(evidence2.ledger_entries[1].decision, Decision.ALLOW)
         self.assertEqual(evidence2.ledger_entries[2].decision, Decision.ALLOW)
         self.assertEqual(evidence2.ledger_entries[3].decision, Decision.DENY)
-        self.assertIn("REPLAY_DETECTED", evidence2.ledger_entries[3].permit_denial_reasons)
+        self.assertIn(
+            "REPLAY_DETECTED", evidence2.ledger_entries[3].permit_denial_reasons
+        )
 
     def test_multi_use_permit_use_count_reconstruction(self) -> None:
         """Verify use_count is correctly reconstructed from ledger."""
@@ -489,7 +490,9 @@ class TestPermitIntegrationCrossRestart(unittest.TestCase):
                 params={"text": "hello"},
             )
             receipt = kernel1.submit(request, permit_token=permit)
-            self.assertEqual(receipt.decision, Decision.ALLOW, f"Use {i+1} should succeed")
+            self.assertEqual(
+                receipt.decision, Decision.ALLOW, f"Use {i + 1} should succeed"
+            )
 
         # Export and restart
         evidence1 = kernel1.export_evidence()
@@ -505,7 +508,9 @@ class TestPermitIntegrationCrossRestart(unittest.TestCase):
             subject=permit.subject,
         )
         self.assertIsNotNone(nonce_record)
-        self.assertEqual(nonce_record.use_count, 3, "use_count should be reconstructed as 3")
+        self.assertEqual(
+            nonce_record.use_count, 3, "use_count should be reconstructed as 3"
+        )
 
         # Use permit 2 more times (should both succeed, reaching max_executions=5)
         for i in range(3, 5):
@@ -519,7 +524,9 @@ class TestPermitIntegrationCrossRestart(unittest.TestCase):
                 params={"text": "hello"},
             )
             receipt = kernel2.submit(request, permit_token=permit)
-            self.assertEqual(receipt.decision, Decision.ALLOW, f"Use {i+1} should succeed")
+            self.assertEqual(
+                receipt.decision, Decision.ALLOW, f"Use {i + 1} should succeed"
+            )
 
         # Sixth use should fail
         clock.advance(100)
