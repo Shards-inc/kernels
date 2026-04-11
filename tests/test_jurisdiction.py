@@ -2,7 +2,7 @@
 
 import unittest
 
-from kernels.common.types import KernelRequest, KernelState, ToolCall
+from kernels.common.types import KernelRequest, ToolCall
 from kernels.jurisdiction.policy import JurisdictionPolicy
 from kernels.jurisdiction.rules import (
     check_actor_allowed,

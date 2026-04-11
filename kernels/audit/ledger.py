@@ -23,14 +23,14 @@ from kernels.common.codec import serialize_for_audit, audit_entry_to_dict
 
 class AuditLedger:
     """Append-only audit ledger with hash-chained entries.
-    
+
     The ledger enforces append-only semantics. Entries cannot be modified
     or removed once added. The hash chain allows verification of integrity.
     """
 
     def __init__(self, kernel_id: str, variant: str) -> None:
         """Initialize an empty audit ledger.
-        
+
         Args:
             kernel_id: Identifier of the kernel this ledger belongs to.
             variant: Variant name of the kernel.
@@ -120,7 +120,9 @@ class AuditLedger:
         try:
             # Compute hashes for params and evidence
             params_hash = compute_hash_dict(params) if params else None
-            evidence_hash = compute_hash_dict({"evidence": evidence}) if evidence else None
+            evidence_hash = (
+                compute_hash_dict({"evidence": evidence}) if evidence else None
+            )
 
             # Serialize entry data for hashing
             entry_data = serialize_for_audit(
@@ -189,10 +191,10 @@ class AuditLedger:
 
     def export(self, ts_ms: int) -> EvidenceBundle:
         """Export the ledger as an evidence bundle.
-        
+
         Args:
             ts_ms: Timestamp of export in milliseconds.
-            
+
         Returns:
             EvidenceBundle containing all entries and verification data.
         """
@@ -206,7 +208,7 @@ class AuditLedger:
 
     def to_list(self) -> list[dict[str, Any]]:
         """Convert ledger to list of dictionaries for serialization.
-        
+
         Returns:
             List of entry dictionaries.
         """

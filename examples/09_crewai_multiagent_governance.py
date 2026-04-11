@@ -55,6 +55,7 @@ from kernels.permits import PermitBuilder
 # Simulated Tool Implementations
 # ============================================================================
 
+
 def web_search(query: str) -> str:
     """Search the web (LOW RISK - read-only)."""
     print("\n🔍 WEB SEARCH:")
@@ -122,6 +123,7 @@ def publish_blog(title: str, content: str, publish: bool = False) -> str:
 # ============================================================================
 # Multi-Agent Governance Scenario
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -199,8 +201,8 @@ def main():
 
     delegation_matrix = {
         researcher_id: [analyst_id],  # Researcher can delegate to Analyst only
-        analyst_id: [publisher_id],   # Analyst can delegate to Publisher only
-        publisher_id: [],              # Publisher cannot delegate (terminal agent)
+        analyst_id: [publisher_id],  # Analyst can delegate to Publisher only
+        publisher_id: [],  # Publisher cannot delegate (terminal agent)
     }
 
     print("✓ Delegation matrix configured:")
@@ -278,7 +280,9 @@ def main():
     print("✓ Tools wrapped with governance:")
     print("  Researcher: web_search [NO PERMIT], read_file [NO PERMIT]")
     print("  Analyst: analyze_data [NO PERMIT], create_report [NO PERMIT]")
-    print("  Publisher: write_file [PERMIT REQUIRED], send_email [PERMIT REQUIRED], publish_blog [PERMIT REQUIRED]")
+    print(
+        "  Publisher: write_file [PERMIT REQUIRED], send_email [PERMIT REQUIRED], publish_blog [PERMIT REQUIRED]"
+    )
     print()
 
     # ========================================================================
@@ -305,8 +309,7 @@ def main():
     # Analyst analyzes data
     print("Analyst analyzes data...")
     result = analyst_analyze._run(
-        data="[research data from web search]",
-        analysis_type="sentiment analysis"
+        data="[research data from web search]", analysis_type="sentiment analysis"
     )
     print("✓ ALLOWED (no permit needed)")
     print(f"  Result: {result}")
@@ -315,8 +318,7 @@ def main():
     # Analyst creates report
     print("Analyst creates internal report...")
     result = analyst_report._run(
-        title="AI Governance Analysis",
-        content="[analysis results]"
+        title="AI Governance Analysis", content="[analysis results]"
     )
     print("✓ ALLOWED (no permit needed)")
     print(f"  Result: {result}")
@@ -333,8 +335,7 @@ def main():
 
     try:
         result = publisher_write._run(
-            path="/var/www/blog/post.html",
-            content="<html>Unauthorized content</html>"
+            path="/var/www/blog/post.html", content="<html>Unauthorized content</html>"
         )
         print(f"✗ ERROR: Should have been denied! Result: {result}")
     except PermissionError as e:
@@ -358,10 +359,12 @@ def main():
         .subject(publisher_id)
         .jurisdiction("default")
         .action("write_file")
-        .params({
-            "path": "/var/www/blog/approved-post.html",
-            "content": "<html>Approved AI governance article</html>",
-        })
+        .params(
+            {
+                "path": "/var/www/blog/approved-post.html",
+                "content": "<html>Approved AI governance article</html>",
+            }
+        )
         .max_executions(1)
         .valid_from_ms(0)
         .valid_until_ms(10000000)
@@ -442,11 +445,13 @@ def main():
         .subject(publisher_id)
         .jurisdiction("default")
         .action("send_email")
-        .params({
-            "to": "subscribers@company.com",
-            "subject": "New AI Governance Article Published",
-            "body": "Check out our latest article on AI governance...",
-        })
+        .params(
+            {
+                "to": "subscribers@company.com",
+                "subject": "New AI Governance Article Published",
+                "body": "Check out our latest article on AI governance...",
+            }
+        )
         .max_executions(1)
         .valid_from_ms(0)
         .valid_until_ms(10000000)
@@ -460,11 +465,13 @@ def main():
         .subject(publisher_id)
         .jurisdiction("default")
         .action("publish_blog")
-        .params({
-            "title": "AI Governance Best Practices",
-            "content": "<html>Comprehensive guide...</html>",
-            "publish": True,
-        })
+        .params(
+            {
+                "title": "AI Governance Best Practices",
+                "content": "<html>Comprehensive guide...</html>",
+                "publish": True,
+            }
+        )
         .max_executions(1)
         .valid_from_ms(0)
         .valid_until_ms(10000000)
@@ -515,15 +522,15 @@ def main():
 
     print("Audit summary by agent:")
     agent_actions = {}
-    for entry in evidence['entries']:
-        actor = entry.get('actor', 'unknown')
+    for entry in evidence["entries"]:
+        actor = entry.get("actor", "unknown")
         if actor not in agent_actions:
-            agent_actions[actor] = {'allow': 0, 'deny': 0}
+            agent_actions[actor] = {"allow": 0, "deny": 0}
 
-        if entry['decision'] == 'ALLOW':
-            agent_actions[actor]['allow'] += 1
-        elif entry['decision'] == 'DENY':
-            agent_actions[actor]['deny'] += 1
+        if entry["decision"] == "ALLOW":
+            agent_actions[actor]["allow"] += 1
+        elif entry["decision"] == "DENY":
+            agent_actions[actor]["deny"] += 1
 
     for actor, stats in agent_actions.items():
         print(f"  {actor}: {stats['allow']} ALLOW, {stats['deny']} DENY")

@@ -39,7 +39,7 @@ def main() -> None:
 
     receipt = kernel.submit(request)
 
-    print(f"\nReceipt received:")
+    print("\nReceipt received:")
     print(f"  Status: {receipt.status.value}")
     print(f"  Decision: {receipt.decision.value}")
     print(f"  State transition: {receipt.state_from.value} -> {receipt.state_to.value}")
@@ -47,7 +47,7 @@ def main() -> None:
 
     # Export evidence
     evidence = kernel.export_evidence()
-    print(f"\nEvidence bundle:")
+    print("\nEvidence bundle:")
     print(f"  Kernel ID: {evidence.kernel_id}")
     print(f"  Variant: {evidence.variant}")
     print(f"  Entries: {len(evidence.ledger_entries)}")

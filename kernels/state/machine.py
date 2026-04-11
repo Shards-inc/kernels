@@ -13,7 +13,7 @@ from kernels.state.transitions import can_transition, is_terminal
 
 class StateMachine:
     """Deterministic state machine with fail-closed semantics.
-    
+
     The state machine starts in BOOTING state and must be explicitly
     transitioned to IDLE before accepting requests.
     """
@@ -24,7 +24,7 @@ class StateMachine:
         on_transition: Optional[Callable[[KernelState, KernelState], None]] = None,
     ) -> None:
         """Initialize the state machine.
-        
+
         Args:
             initial_state: Starting state. Defaults to BOOTING.
             on_transition: Optional callback invoked on each transition.
@@ -55,13 +55,13 @@ class StateMachine:
 
     def transition(self, to_state: KernelState) -> KernelState:
         """Transition to a new state.
-        
+
         Args:
             to_state: Target state.
-            
+
         Returns:
             The previous state.
-            
+
         Raises:
             StateError: If transition is not allowed.
         """
@@ -86,26 +86,24 @@ class StateMachine:
 
     def halt(self) -> KernelState:
         """Transition to HALTED state from any non-terminal state.
-        
+
         Returns:
             The previous state.
-            
+
         Raises:
             StateError: If already in terminal state.
         """
         if self.is_terminal:
-            raise StateError(
-                f"Cannot halt from terminal state {self._state.value}"
-            )
+            raise StateError(f"Cannot halt from terminal state {self._state.value}")
 
         return self.transition(KernelState.HALTED)
 
     def reset(self, to_state: KernelState = KernelState.BOOTING) -> None:
         """Reset the state machine.
-        
+
         This is a privileged operation that bypasses transition rules.
         Use only for testing or re-initialization.
-        
+
         Args:
             to_state: State to reset to. Defaults to BOOTING.
         """
@@ -114,10 +112,10 @@ class StateMachine:
 
     def assert_state(self, expected: KernelState) -> None:
         """Assert that the machine is in an expected state.
-        
+
         Args:
             expected: Expected state.
-            
+
         Raises:
             StateError: If not in expected state.
         """
@@ -128,7 +126,7 @@ class StateMachine:
 
     def assert_not_halted(self) -> None:
         """Assert that the machine is not halted.
-        
+
         Raises:
             StateError: If halted.
         """

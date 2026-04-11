@@ -20,6 +20,7 @@ from kernels.common.errors import PermitError
 @dataclass
 class LangChainToolResult:
     """Result from a governed LangChain tool execution."""
+
     tool_name: str
     result: Any
     was_allowed: bool
@@ -132,7 +133,9 @@ class GovernedTool:
 
         # Extract audit hash
         evidence = self.kernel.export_evidence()
-        audit_hash = evidence.ledger_entries[-1].entry_hash if evidence.ledger_entries else None
+        audit_hash = (
+            evidence.ledger_entries[-1].entry_hash if evidence.ledger_entries else None
+        )
 
         # Build result
         if receipt.decision == Decision.ALLOW:
@@ -154,7 +157,11 @@ class GovernedTool:
                 audit_hash=audit_hash,
             )
 
-    def invoke(self, input: Union[str, Dict[str, Any]], permit_token: Optional[PermitToken] = None) -> Any:
+    def invoke(
+        self,
+        input: Union[str, Dict[str, Any]],
+        permit_token: Optional[PermitToken] = None,
+    ) -> Any:
         """
         LangChain Tool.invoke() compatibility.
 
@@ -178,7 +185,9 @@ class GovernedTool:
 
         return result.result
 
-    def __call__(self, *args, permit_token: Optional[PermitToken] = None, **kwargs) -> Any:
+    def __call__(
+        self, *args, permit_token: Optional[PermitToken] = None, **kwargs
+    ) -> Any:
         """Direct call syntax."""
         result = self.run(permit_token=permit_token, **kwargs)
 
@@ -349,9 +358,11 @@ def create_langchain_adapter(
         kernel = StrictKernel()
     elif variant == "permissive":
         from kernels.variants.permissive_kernel import PermissiveKernel
+
         kernel = PermissiveKernel()
     elif variant == "evidence-first":
         from kernels.variants.evidence_first_kernel import EvidenceFirstKernel
+
         kernel = EvidenceFirstKernel()
     else:
         raise ValueError(f"Unknown variant: {variant}")

@@ -24,14 +24,14 @@ class ExecutionResult:
 
 class Dispatcher:
     """Dispatcher for tool execution.
-    
+
     The dispatcher validates tool calls and invokes tools through
     the registry. All execution is explicit and synchronous.
     """
 
     def __init__(self, registry: ToolRegistry) -> None:
         """Initialize dispatcher with a tool registry.
-        
+
         Args:
             registry: Tool registry to use for lookups.
         """
@@ -44,10 +44,10 @@ class Dispatcher:
 
     def validate_tool_call(self, tool_call: ToolCall | dict[str, Any]) -> list[str]:
         """Validate a tool call before execution.
-        
+
         Args:
             tool_call: Tool call to validate.
-            
+
         Returns:
             List of validation errors. Empty if valid.
         """
@@ -81,10 +81,10 @@ class Dispatcher:
 
     def execute(self, tool_call: ToolCall | dict[str, Any]) -> ExecutionResult:
         """Execute a tool call.
-        
+
         Args:
             tool_call: Tool call to execute.
-            
+
         Returns:
             ExecutionResult with success status and result or error.
         """
@@ -134,7 +134,7 @@ class Dispatcher:
 
     def list_available_tools(self) -> list[str]:
         """List all available tools.
-        
+
         Returns:
             List of tool names.
         """

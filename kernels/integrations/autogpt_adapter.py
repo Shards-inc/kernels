@@ -123,7 +123,10 @@ class AutonomousLoopMonitor:
             return True
 
         # Check iteration limit
-        if self.max_iterations is not None and self.stats.total_iterations >= self.max_iterations:
+        if (
+            self.max_iterations is not None
+            and self.stats.total_iterations >= self.max_iterations
+        ):
             self._halt("Maximum iterations reached")
             return True
 
@@ -135,7 +138,10 @@ class AutonomousLoopMonitor:
                 return True
 
         # Check denial limit
-        if self.max_denials is not None and self.stats.commands_denied >= self.max_denials:
+        if (
+            self.max_denials is not None
+            and self.stats.commands_denied >= self.max_denials
+        ):
             self._halt("Maximum denials reached")
             return True
 
@@ -236,14 +242,14 @@ class AutoGPTAdapter:
 
         # Risk scoring weights (0.0-1.0)
         self._risk_weights = {
-            "execute_shell": 1.0,       # CRITICAL
-            "execute_python": 0.9,      # HIGH
-            "write_file": 0.8,          # HIGH
-            "delete_file": 0.9,         # HIGH
-            "browse_website": 0.3,      # LOW
-            "read_file": 0.2,           # LOW
-            "send_email": 0.7,          # MEDIUM-HIGH
-            "make_api_call": 0.5,       # MEDIUM
+            "execute_shell": 1.0,  # CRITICAL
+            "execute_python": 0.9,  # HIGH
+            "write_file": 0.8,  # HIGH
+            "delete_file": 0.9,  # HIGH
+            "browse_website": 0.3,  # LOW
+            "read_file": 0.2,  # LOW
+            "send_email": 0.7,  # MEDIUM-HIGH
+            "make_api_call": 0.5,  # MEDIUM
         }
 
         # Autonomous loop monitoring
@@ -305,7 +311,9 @@ class AutoGPTAdapter:
 
         # Create governed wrapper
         @wraps(func)
-        def governed_command(permit_token: Optional[PermitToken] = None, **kwargs) -> str:
+        def governed_command(
+            permit_token: Optional[PermitToken] = None, **kwargs
+        ) -> str:
             # Check autonomous loop monitor
             if self.monitor and self.monitor.should_halt():
                 halt_reason = self.monitor.get_halt_reason()
@@ -352,7 +360,9 @@ class AutoGPTAdapter:
 
         return governed_command
 
-    def governed_command(self, name: str, description: str = "", risk_score: Optional[float] = None):
+    def governed_command(
+        self, name: str, description: str = "", risk_score: Optional[float] = None
+    ):
         """
         Decorator for creating governed AutoGPT commands.
 

@@ -10,16 +10,16 @@ from typing import Any
 
 def serialize_deterministic(data: Any) -> str:
     """Serialize data to JSON with deterministic ordering.
-    
+
     Keys are sorted to ensure consistent output. No whitespace is added
     to minimize size and ensure byte-for-byte reproducibility.
-    
+
     Args:
         data: Data to serialize. Must be JSON-serializable.
-        
+
     Returns:
         JSON string with sorted keys and no extra whitespace.
-        
+
     Raises:
         TypeError: If data is not JSON-serializable.
     """
@@ -28,13 +28,13 @@ def serialize_deterministic(data: Any) -> str:
 
 def deserialize(data: str) -> Any:
     """Deserialize JSON string to Python object.
-    
+
     Args:
         data: JSON string to deserialize.
-        
+
     Returns:
         Deserialized Python object.
-        
+
     Raises:
         json.JSONDecodeError: If data is not valid JSON.
     """
@@ -105,7 +105,9 @@ def serialize_for_audit(
         "error": error,
         "permit_digest": permit_digest,
         "permit_verification": permit_verification,
-        "permit_denial_reasons": list(permit_denial_reasons) if permit_denial_reasons else None,
+        "permit_denial_reasons": list(permit_denial_reasons)
+        if permit_denial_reasons
+        else None,
         "proposal_hash": proposal_hash,
         "permit_nonce": permit_nonce,
         "permit_issuer": permit_issuer,
@@ -132,9 +134,15 @@ def audit_entry_to_dict(entry: Any) -> dict[str, Any]:
         "request_id": entry.request_id,
         "actor": entry.actor,
         "intent": entry.intent,
-        "decision": entry.decision.value if hasattr(entry.decision, "value") else entry.decision,
-        "state_from": entry.state_from.value if hasattr(entry.state_from, "value") else entry.state_from,
-        "state_to": entry.state_to.value if hasattr(entry.state_to, "value") else entry.state_to,
+        "decision": entry.decision.value
+        if hasattr(entry.decision, "value")
+        else entry.decision,
+        "state_from": entry.state_from.value
+        if hasattr(entry.state_from, "value")
+        else entry.state_from,
+        "state_to": entry.state_to.value
+        if hasattr(entry.state_to, "value")
+        else entry.state_to,
         "tool_name": entry.tool_name,
         "params_hash": entry.params_hash,
         "evidence_hash": entry.evidence_hash,
@@ -147,7 +155,9 @@ def audit_entry_to_dict(entry: Any) -> dict[str, Any]:
     if hasattr(entry, "permit_verification"):
         result["permit_verification"] = entry.permit_verification
     if hasattr(entry, "permit_denial_reasons"):
-        result["permit_denial_reasons"] = list(entry.permit_denial_reasons) if entry.permit_denial_reasons else None
+        result["permit_denial_reasons"] = (
+            list(entry.permit_denial_reasons) if entry.permit_denial_reasons else None
+        )
     if hasattr(entry, "proposal_hash"):
         result["proposal_hash"] = entry.proposal_hash
     if hasattr(entry, "permit_nonce"):

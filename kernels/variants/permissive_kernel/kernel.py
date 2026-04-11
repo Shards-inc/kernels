@@ -7,12 +7,8 @@ The permissive kernel has relaxed constraints:
 """
 
 from kernels.common.types import (
-    Decision,
     KernelConfig,
-    KernelReceipt,
     KernelRequest,
-    KernelState,
-    ReceiptStatus,
 )
 from kernels.jurisdiction.policy import JurisdictionPolicy
 from kernels.variants.base import BaseKernel
@@ -20,7 +16,7 @@ from kernels.variants.base import BaseKernel
 
 class PermissiveKernel(BaseKernel):
     """Permissive kernel with relaxed enforcement.
-    
+
     This variant:
     - Uses relaxed ambiguity thresholds
     - Accepts intent-only requests without tool_call

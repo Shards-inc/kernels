@@ -13,7 +13,7 @@ from kernels.variants.base import BaseKernel
 
 class StrictKernel(BaseKernel):
     """Strict kernel with maximum enforcement.
-    
+
     This variant:
     - Always operates in fail-closed mode
     - Requires jurisdiction checks for all requests

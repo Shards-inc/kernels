@@ -59,6 +59,7 @@ from kernels.permits import PermitBuilder
 # Simulated AutoGPT Command Implementations
 # ============================================================================
 
+
 def execute_shell(command: str) -> str:
     """Execute shell command (CRITICAL RISK)."""
     print("\n🚨 SHELL EXECUTION:")
@@ -131,6 +132,7 @@ def delete_file(path: str) -> str:
 # ============================================================================
 # Autonomous Agent Governance Scenario
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -333,10 +335,12 @@ def main():
         .subject("autogpt-agent")
         .jurisdiction("default")
         .action("write_file")
-        .params({
-            "path": "/var/www/blog/ai-governance-article.md",
-            "content": "# AI Governance Best Practices\n\n[article content]",
-        })
+        .params(
+            {
+                "path": "/var/www/blog/ai-governance-article.md",
+                "content": "# AI Governance Best Practices\n\n[article content]",
+            }
+        )
         .max_executions(1)
         .valid_from_ms(0)
         .valid_until_ms(10000000)

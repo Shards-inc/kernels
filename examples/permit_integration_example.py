@@ -51,10 +51,12 @@ def main() -> None:
         .jurisdiction("production")
         .action("echo")  # Authorize 'echo' tool
         .params({"text": "Hello KERNELS"})
-        .constraints({
-            "max_time_ms": 5000,
-            "forbidden_params": [],
-        })
+        .constraints(
+            {
+                "max_time_ms": 5000,
+                "forbidden_params": [],
+            }
+        )
         .max_executions(1)  # Single-use permit
         .valid_from_ms(0)
         .valid_until_ms(clock.now_ms() + 3600_000)  # Valid for 1 hour
@@ -100,7 +102,11 @@ def main() -> None:
     print(f"   Decision: {entry.decision}")
     print(f"   Tool name: {entry.tool_name}")
     print(f"   Permit verified: {entry.permit_verification}")
-    print(f"   Permit digest: {entry.permit_digest[:16]}..." if entry.permit_digest else "   Permit digest: None")
+    print(
+        f"   Permit digest: {entry.permit_digest[:16]}..."
+        if entry.permit_digest
+        else "   Permit digest: None"
+    )
     print(f"   Proposal hash: {entry.proposal_hash}")
     print(f"   Denial reasons: {entry.permit_denial_reasons}")
 

@@ -60,6 +60,7 @@ from kernels.permits import PermitBuilder
 # E-commerce Order Processing Workflow
 # ============================================================================
 
+
 def validate_order(state: Dict[str, Any]) -> Dict[str, Any]:
     """Validate order details (LOW RISK - no permits needed)."""
     print("\n📋 VALIDATING ORDER:")
@@ -68,22 +69,22 @@ def validate_order(state: Dict[str, Any]) -> Dict[str, Any]:
     print()
 
     # Check inventory
-    items = state.get('items', [])
-    inventory = state.get('inventory', {})
+    items = state.get("items", [])
+    inventory = state.get("inventory", {})
 
     for item in items:
-        item_id = item['id']
-        quantity = item['quantity']
+        item_id = item["id"]
+        quantity = item["quantity"]
         available = inventory.get(item_id, 0)
 
         if available < quantity:
-            state['validation_errors'] = state.get('validation_errors', [])
-            state['validation_errors'].append(
+            state["validation_errors"] = state.get("validation_errors", [])
+            state["validation_errors"].append(
                 f"Insufficient inventory for {item_id}: {available} < {quantity}"
             )
 
     # Mark as validated
-    state['order_validated'] = len(state.get('validation_errors', [])) == 0
+    state["order_validated"] = len(state.get("validation_errors", [])) == 0
 
     return state
 
@@ -96,8 +97,8 @@ def process_payment(state: Dict[str, Any]) -> Dict[str, Any]:
     print()
 
     # Simulate payment processing
-    state['payment_processed'] = True
-    state['payment_timestamp'] = 1234567890
+    state["payment_processed"] = True
+    state["payment_timestamp"] = 1234567890
 
     return state
 
@@ -106,17 +107,17 @@ def update_inventory(state: Dict[str, Any]) -> Dict[str, Any]:
     """Update inventory (HIGH RISK - requires permit)."""
     print("\n📦 UPDATING INVENTORY:")
 
-    items = state.get('items', [])
-    inventory = state.get('inventory', {})
+    items = state.get("items", [])
+    inventory = state.get("inventory", {})
 
     for item in items:
-        item_id = item['id']
-        quantity = item['quantity']
+        item_id = item["id"]
+        quantity = item["quantity"]
         inventory[item_id] = inventory.get(item_id, 0) - quantity
         print(f"   {item_id}: {inventory[item_id] + quantity} → {inventory[item_id]}")
 
-    state['inventory'] = inventory
-    state['inventory_updated'] = True
+    state["inventory"] = inventory
+    state["inventory_updated"] = True
 
     print()
 
@@ -130,7 +131,7 @@ def send_confirmation(state: Dict[str, Any]) -> Dict[str, Any]:
     print(f"   Order ID: {state.get('order_id')}")
     print()
 
-    state['confirmation_sent'] = True
+    state["confirmation_sent"] = True
 
     return state
 
@@ -142,8 +143,8 @@ def ship_order(state: Dict[str, Any]) -> Dict[str, Any]:
     print(f"   Address: {state.get('shipping_address', 'unknown')}")
     print()
 
-    state['order_shipped'] = True
-    state['shipping_timestamp'] = 1234567900
+    state["order_shipped"] = True
+    state["shipping_timestamp"] = 1234567900
 
     return state
 
@@ -151,6 +152,7 @@ def ship_order(state: Dict[str, Any]) -> Dict[str, Any]:
 # ============================================================================
 # Workflow Governance Scenario
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -214,14 +216,17 @@ def main():
     adapter.add_invariant(
         name="budget_limit",
         description="Total price must not exceed customer budget",
-        validator=lambda state: state.get("total_price", 0) <= state.get("customer_budget", 10000),
+        validator=lambda state: state.get("total_price", 0)
+        <= state.get("customer_budget", 10000),
         enforce=True,
     )
 
     adapter.add_invariant(
         name="positive_inventory",
         description="Inventory levels must remain non-negative",
-        validator=lambda state: all(qty >= 0 for qty in state.get("inventory", {}).values()),
+        validator=lambda state: all(
+            qty >= 0 for qty in state.get("inventory", {}).values()
+        ),
         enforce=True,
     )
 
@@ -229,7 +234,8 @@ def main():
         name="payment_before_shipping",
         description="Payment must be processed before shipping",
         validator=lambda state: (
-            not state.get("order_shipped", False) or state.get("payment_processed", False)
+            not state.get("order_shipped", False)
+            or state.get("payment_processed", False)
         ),
         enforce=True,
     )
@@ -339,7 +345,7 @@ def main():
     workflow_state = governed_validate(workflow_state)
 
     print(f"✓ Order validated: {workflow_state['order_validated']}")
-    if workflow_state.get('validation_errors'):
+    if workflow_state.get("validation_errors"):
         print(f"  Validation errors: {workflow_state['validation_errors']}")
     print()
 
@@ -413,7 +419,12 @@ def main():
         .subject("ecommerce-workflow")
         .jurisdiction("default")
         .action("ship_order")
-        .params({"order_id": "ORD-2026-001", "shipping_address": "123 Main St, City, State 12345"})
+        .params(
+            {
+                "order_id": "ORD-2026-001",
+                "shipping_address": "123 Main St, City, State 12345",
+            }
+        )
         .max_executions(1)
         .valid_from_ms(0)
         .valid_until_ms(10000000)
@@ -443,7 +454,9 @@ def main():
     print()
 
     # Step 4: Send confirmation
-    workflow_state = governed_confirmation(workflow_state, permit_token=confirmation_permit)
+    workflow_state = governed_confirmation(
+        workflow_state, permit_token=confirmation_permit
+    )
     print(f"✓ Confirmation sent: {workflow_state['confirmation_sent']}")
     print()
 
@@ -461,7 +474,7 @@ def main():
 
     # Create a state that violates budget invariant
     invalid_state = workflow_state.copy()
-    invalid_state['total_price'] = 2000.0  # Exceeds budget of $1000
+    invalid_state["total_price"] = 2000.0  # Exceeds budget of $1000
 
     print("Attempting state with total_price = $2000 (exceeds budget of $1000)...")
     print()

@@ -55,6 +55,7 @@ from kernels.permits import PermitBuilder
 # In real OpenClaw, these would be TypeScript/JavaScript skills.
 # Here we show Python equivalents to demonstrate governance.
 
+
 def shell_execute(command: str) -> str:
     """
     Execute shell command (OpenClaw: system.run skill).
@@ -147,6 +148,7 @@ def slack_send_message(channel: str, message: str, mention_all: bool = False) ->
 # ============================================================================
 # Main Example
 # ============================================================================
+
 
 def main():
     print("=" * 80)
@@ -297,11 +299,13 @@ def main():
         .subject("openclaw-assistant")
         .jurisdiction("default")
         .action("calendar_create_event")
-        .params({
-            "title": "Team standup",
-            "start_time": "2026-02-10 09:00",
-            "attendees": "team@company.com",
-        })
+        .params(
+            {
+                "title": "Team standup",
+                "start_time": "2026-02-10 09:00",
+                "attendees": "team@company.com",
+            }
+        )
         .constraints({})
         .max_executions(1)
         .valid_from_ms(0)
@@ -342,10 +346,12 @@ def main():
         .subject("openclaw-assistant")
         .jurisdiction("default")
         .action("web_browse")
-        .params({
-            "url": "https://company.com/api/submit",
-            "action": "submit",
-        })
+        .params(
+            {
+                "url": "https://company.com/api/submit",
+                "action": "submit",
+            }
+        )
         .constraints({})
         .max_executions(1)
         .valid_from_ms(0)
@@ -386,10 +392,10 @@ def main():
     print()
 
     print("Audit summary:")
-    for i, entry in enumerate(evidence['entries'], 1):
-        decision = entry['decision']
-        tool = entry.get('tool_name', 'N/A')
-        permit_status = entry.get('permit_verification', 'N/A')
+    for i, entry in enumerate(evidence["entries"], 1):
+        decision = entry["decision"]
+        tool = entry.get("tool_name", "N/A")
+        permit_status = entry.get("permit_verification", "N/A")
 
         print(f"  {i}. [{decision}] {tool} (Permit: {permit_status})")
 

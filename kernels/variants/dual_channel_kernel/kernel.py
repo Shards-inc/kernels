@@ -16,7 +16,7 @@ REQUIRED_CONSTRAINT_KEYS = frozenset({"scope", "non_goals", "success_criteria"})
 
 class DualChannelKernel(BaseKernel):
     """Dual-channel kernel requiring intent and constraints.
-    
+
     This variant:
     - Requires both intent and a constraints dict in params
     - Constraints must include scope, non_goals, and success_criteria

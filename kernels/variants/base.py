@@ -5,7 +5,7 @@ provides common functionality that variants can extend.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Optional
 
 from kernels.common.types import (
     Decision,
@@ -19,10 +19,7 @@ from kernels.common.types import (
     ToolCall,
 )
 from kernels.common.errors import (
-    AmbiguityError,
     BootError,
-    JurisdictionError,
-    PermitError,
     StateError,
 )
 from kernels.common.validate import validate_request, check_ambiguity
@@ -41,17 +38,17 @@ from kernels.permits import (
 
 class Kernel(ABC):
     """Protocol defining the kernel API surface.
-    
+
     All kernel variants must implement these methods.
     """
 
     @abstractmethod
     def boot(self, config: KernelConfig) -> None:
         """Boot the kernel with configuration.
-        
+
         Args:
             config: Kernel configuration.
-            
+
         Raises:
             BootError: If boot fails.
         """
@@ -60,14 +57,16 @@ class Kernel(ABC):
     @abstractmethod
     def get_state(self) -> KernelState:
         """Get the current kernel state.
-        
+
         Returns:
             Current state.
         """
         ...
 
     @abstractmethod
-    def submit(self, request: KernelRequest, permit_token: Optional[PermitToken] = None) -> KernelReceipt:
+    def submit(
+        self, request: KernelRequest, permit_token: Optional[PermitToken] = None
+    ) -> KernelReceipt:
         """Submit a request for processing.
 
         Args:
@@ -82,7 +81,7 @@ class Kernel(ABC):
     @abstractmethod
     def step(self) -> Optional[KernelReceipt]:
         """Advance the kernel by one step.
-        
+
         Returns:
             Receipt if a step was taken, None if idle.
         """
@@ -91,10 +90,10 @@ class Kernel(ABC):
     @abstractmethod
     def halt(self, reason: str) -> KernelReceipt:
         """Halt the kernel.
-        
+
         Args:
             reason: Reason for halting.
-            
+
         Returns:
             Receipt confirming halt.
         """
@@ -103,7 +102,7 @@ class Kernel(ABC):
     @abstractmethod
     def export_evidence(self) -> EvidenceBundle:
         """Export the audit ledger as evidence.
-        
+
         Returns:
             Evidence bundle with full ledger.
         """
@@ -112,7 +111,7 @@ class Kernel(ABC):
 
 class BaseKernel(Kernel):
     """Base implementation with common kernel functionality.
-    
+
     Variants extend this class and override specific behaviors.
     """
 
@@ -125,7 +124,7 @@ class BaseKernel(Kernel):
         self._dispatcher: Optional[Dispatcher] = None
         self._pending_request: Optional[KernelRequest] = None
         self._pending_decision: Optional[Decision] = None
-        self._pending_result: Optional[any] = None
+        self._pending_result: Optional[Any] = None
         self._nonce_registry: NonceRegistry = NonceRegistry()
         self._keyring: dict[str, bytes] = {}  # HMAC keys for permit verification
 
@@ -192,12 +191,14 @@ class BaseKernel(Kernel):
         # Rebuild nonce registry from entries with permit verification
         # Must process in ledger_seq order to correctly reconstruct use_count
         for entry in sorted_entries:
-            if (entry.permit_digest and
-                entry.permit_verification == "ALLOW" and
-                entry.permit_nonce and
-                entry.permit_issuer and
-                entry.permit_subject and
-                entry.permit_max_executions is not None):
+            if (
+                entry.permit_digest
+                and entry.permit_verification == "ALLOW"
+                and entry.permit_nonce
+                and entry.permit_issuer
+                and entry.permit_subject
+                and entry.permit_max_executions is not None
+            ):
                 # Reconstruct nonce usage by calling check_and_record
                 # This will mark the nonce as used in the registry
                 self._nonce_registry.check_and_record(
@@ -229,9 +230,13 @@ class BaseKernel(Kernel):
             return KernelState.BOOTING
         return self._state_machine.state
 
-    def submit(self, request: KernelRequest, permit_token: Optional[PermitToken] = None) -> KernelReceipt:
+    def submit(
+        self, request: KernelRequest, permit_token: Optional[PermitToken] = None
+    ) -> KernelReceipt:
         """Submit a request for processing."""
         if self._state_machine is None:
+            raise StateError("Kernel not booted")
+        if self._dispatcher is None or self._ledger is None:
             raise StateError("Kernel not booted")
 
         self._state_machine.assert_not_halted()
@@ -311,7 +316,9 @@ class BaseKernel(Kernel):
             permit_nonce = permit_token.nonce  # For ledger-backed replay protection
             permit_issuer = permit_token.issuer  # For nonce reconstruction
             permit_subject = permit_token.subject  # For nonce reconstruction
-            permit_max_executions = permit_token.max_executions  # For nonce reconstruction
+            permit_max_executions = (
+                permit_token.max_executions
+            )  # For nonce reconstruction
 
             if not permit_verification_result.is_allowed():
                 return self._deny_permit(
@@ -330,7 +337,9 @@ class BaseKernel(Kernel):
                 permit_digest=permit_token.permit_id,
                 constraints=permit_token.constraints,
                 max_time_ms=permit_token.constraints.get("max_time_ms"),
-                forbidden_params=tuple(permit_token.constraints.get("forbidden_params", [])),
+                forbidden_params=tuple(
+                    permit_token.constraints.get("forbidden_params", [])
+                ),
                 tool_name=request.tool_call.name if request.tool_call else "",
                 params=request_params.copy(),  # Immutable snapshot
                 decision=Decision.ALLOW,
@@ -445,6 +454,9 @@ class BaseKernel(Kernel):
         if self._state_machine is None:
             raise StateError("Kernel not booted")
 
+        if self._ledger is None:
+            raise StateError("Kernel not booted")
+
         state_from = self._state_machine.state
         self._state_machine.halt()
 
@@ -482,6 +494,9 @@ class BaseKernel(Kernel):
         error: str,
     ) -> KernelReceipt:
         """Create a DENY receipt and audit entry."""
+        if self._state_machine is None or self._ledger is None:
+            raise StateError("Kernel not booted")
+
         # Transition to AUDITING
         if self._state_machine.state != KernelState.AUDITING:
             self._state_machine.transition(KernelState.AUDITING)
@@ -518,6 +533,9 @@ class BaseKernel(Kernel):
         error: str,
     ) -> KernelReceipt:
         """Create a FAILED receipt and audit entry."""
+        if self._state_machine is None or self._ledger is None:
+            raise StateError("Kernel not booted")
+
         # Transition to AUDITING
         if self._state_machine.state != KernelState.AUDITING:
             self._state_machine.transition(KernelState.AUDITING)
@@ -598,6 +616,9 @@ class BaseKernel(Kernel):
         Returns:
             Receipt with DENY decision and permit denial audit.
         """
+        if self._state_machine is None or self._ledger is None:
+            raise StateError("Kernel not booted")
+
         # Transition to AUDITING
         if self._state_machine.state != KernelState.AUDITING:
             self._state_machine.transition(KernelState.AUDITING)

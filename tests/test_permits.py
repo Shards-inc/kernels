@@ -11,16 +11,12 @@ Tests cover:
 - Audit linkage
 """
 
-import hashlib
-import hmac
 import unittest
-from typing import Any
 
 from kernels.permits import (
     NonceRegistry,
     PermitBuilder,
     PermitToken,
-    PermitVerificationResult,
     canonical_permit_bytes,
     compute_permit_id,
     deterministic_nonce,
@@ -73,7 +69,9 @@ class TestCanonicalSerialization(unittest.TestCase):
             key_id="key1",
         )
 
-        self.assertEqual(canonical_permit_bytes(permit1), canonical_permit_bytes(permit2))
+        self.assertEqual(
+            canonical_permit_bytes(permit1), canonical_permit_bytes(permit2)
+        )
 
     def test_canonical_bytes_excludes_signature(self) -> None:
         """Canonical bytes exclude signature by default."""
@@ -254,6 +252,7 @@ class TestHMACSigning(unittest.TestCase):
 
         # Compute and set permit ID
         from dataclasses import replace
+
         permit_id = compute_permit_id(permit_unsigned)
         self.permit = replace(permit_unsigned, permit_id=permit_id)
 
@@ -326,8 +325,9 @@ class TestHMACSigning(unittest.TestCase):
         self.assertEqual(result.status, Decision.DENY)
         # Either SIGNATURE_INVALID or PERMIT_ID_MISMATCH is acceptable (both indicate tampering)
         self.assertTrue(
-            "PERMIT_ID_MISMATCH" in result.reasons or "SIGNATURE_INVALID" in result.reasons,
-            f"Expected PERMIT_ID_MISMATCH or SIGNATURE_INVALID, got {result.reasons}"
+            "PERMIT_ID_MISMATCH" in result.reasons
+            or "SIGNATURE_INVALID" in result.reasons,
+            f"Expected PERMIT_ID_MISMATCH or SIGNATURE_INVALID, got {result.reasons}",
         )
 
 
@@ -340,15 +340,36 @@ class TestNonceRegistry(unittest.TestCase):
 
     def test_check_and_record_first_use(self) -> None:
         """First use of nonce is allowed."""
-        result = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=1000)
+        result = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=1000,
+        )
         self.assertTrue(result)
 
     def test_check_and_record_replay_single_use(self) -> None:
         """Replay of single-use nonce is denied."""
-        self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=1000)
+        self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=1000,
+        )
 
         # Try to use again
-        result = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=2000)
+        result = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=2000,
+        )
 
         self.assertFalse(result)  # Replay detected
 
@@ -357,25 +378,67 @@ class TestNonceRegistry(unittest.TestCase):
         max_uses = 3
 
         # First use
-        r1 = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=max_uses, current_time_ms=1000)
+        r1 = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=max_uses,
+            current_time_ms=1000,
+        )
         self.assertTrue(r1)
 
         # Second use
-        r2 = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=max_uses, current_time_ms=2000)
+        r2 = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=max_uses,
+            current_time_ms=2000,
+        )
         self.assertTrue(r2)
 
         # Third use
-        r3 = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=max_uses, current_time_ms=3000)
+        r3 = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=max_uses,
+            current_time_ms=3000,
+        )
         self.assertTrue(r3)
 
         # Fourth use (exceeds max)
-        r4 = self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=max_uses, current_time_ms=4000)
+        r4 = self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=max_uses,
+            current_time_ms=4000,
+        )
         self.assertFalse(r4)
 
     def test_check_and_record_different_issuers(self) -> None:
         """Same nonce with different issuers are independent."""
-        self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=1000)
-        result = self.registry.check_and_record("nonce1", "issuer2", "subject1", "permit2", max_executions=1, current_time_ms=2000)
+        self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=1000,
+        )
+        result = self.registry.check_and_record(
+            "nonce1",
+            "issuer2",
+            "subject1",
+            "permit2",
+            max_executions=1,
+            current_time_ms=2000,
+        )
 
         self.assertTrue(result)  # Different issuer, so allowed
 
@@ -383,7 +446,14 @@ class TestNonceRegistry(unittest.TestCase):
         """has_nonce checks if nonce exists."""
         self.assertFalse(self.registry.has_nonce("nonce1", "issuer1", "subject1"))
 
-        self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=1000)
+        self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=1000,
+        )
 
         self.assertTrue(self.registry.has_nonce("nonce1", "issuer1", "subject1"))
 
@@ -391,7 +461,14 @@ class TestNonceRegistry(unittest.TestCase):
         """get_record retrieves nonce record."""
         self.assertIsNone(self.registry.get_record("nonce1", "issuer1", "subject1"))
 
-        self.registry.check_and_record("nonce1", "issuer1", "subject1", "permit1", max_executions=1, current_time_ms=1000)
+        self.registry.check_and_record(
+            "nonce1",
+            "issuer1",
+            "subject1",
+            "permit1",
+            max_executions=1,
+            current_time_ms=1000,
+        )
 
         record = self.registry.get_record("nonce1", "issuer1", "subject1")
         self.assertIsNotNone(record)
@@ -493,8 +570,9 @@ class TestPermitVerificationNegative(unittest.TestCase):
         self.assertEqual(result.status, Decision.DENY)
         # Either SIGNATURE_INVALID or PERMIT_ID_MISMATCH is acceptable (both indicate tampering)
         self.assertTrue(
-            "PERMIT_ID_MISMATCH" in result.reasons or "SIGNATURE_INVALID" in result.reasons,
-            f"Expected PERMIT_ID_MISMATCH or SIGNATURE_INVALID, got {result.reasons}"
+            "PERMIT_ID_MISMATCH" in result.reasons
+            or "SIGNATURE_INVALID" in result.reasons,
+            f"Expected PERMIT_ID_MISMATCH or SIGNATURE_INVALID, got {result.reasons}",
         )
 
     # Test 4: Expired permit
@@ -652,7 +730,9 @@ class TestPermitVerificationNegative(unittest.TestCase):
         """Deny when request contains forbidden parameter."""
         from dataclasses import replace
 
-        permit_with_constraint = replace(self.valid_permit, constraints={"forbidden_params": ["--unsafe"]})
+        permit_with_constraint = replace(
+            self.valid_permit, constraints={"forbidden_params": ["--unsafe"]}
+        )
 
         # Re-sign permit
         from kernels.permits import sign_permit
@@ -674,7 +754,9 @@ class TestPermitVerificationNegative(unittest.TestCase):
         )
 
         self.assertEqual(result.status, Decision.DENY)
-        self.assertTrue(any("FORBIDDEN_PARAM_DETECTED" in reason for reason in result.reasons))
+        self.assertTrue(
+            any("FORBIDDEN_PARAM_DETECTED" in reason for reason in result.reasons)
+        )
 
     # Test 13: Missing issuer
     def test_deny_missing_issuer(self) -> None:
@@ -957,7 +1039,9 @@ class TestPermitVerificationNegative(unittest.TestCase):
         """Deny when forbidden_params constraint is not a list."""
         from dataclasses import replace
 
-        permit_bad_constraint = replace(self.valid_permit, constraints={"forbidden_params": "not-a-list"})
+        permit_bad_constraint = replace(
+            self.valid_permit, constraints={"forbidden_params": "not-a-list"}
+        )
 
         # Re-sign
         from kernels.permits import sign_permit
@@ -1216,7 +1300,9 @@ class TestPermitVerificationPositive(unittest.TestCase):
         """Allow request with subset of permit params."""
         from dataclasses import replace
 
-        permit = replace(self.valid_permit, params={"text": "hello", "extra": "allowed"})
+        permit = replace(
+            self.valid_permit, params={"text": "hello", "extra": "allowed"}
+        )
         # Re-sign
         from kernels.permits import sign_permit
 
@@ -1246,7 +1332,9 @@ class TestPermitVerificationPositive(unittest.TestCase):
         # Re-sign
         from kernels.permits import sign_permit
 
-        multi_permit = replace(multi_permit, signature="", nonce="multi-nonce-123456789012345678901234")
+        multi_permit = replace(
+            multi_permit, signature="", nonce="multi-nonce-123456789012345678901234"
+        )
         permit_id = compute_permit_id(multi_permit)
         multi_permit = replace(multi_permit, permit_id=permit_id)
         multi_permit = sign_permit(multi_permit, self.key, "key1")

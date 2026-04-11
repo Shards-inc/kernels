@@ -6,7 +6,6 @@ Fluent builders for constructing requests and policies.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -17,7 +16,7 @@ from kernels.jurisdiction.policy import JurisdictionPolicy
 class RequestBuilder:
     """
     Fluent builder for constructing requests.
-    
+
     Example:
         request = (
             RequestBuilder()
@@ -27,7 +26,7 @@ class RequestBuilder:
             .build()
         )
     """
-    
+
     def __init__(self):
         self._request_id: Optional[str] = None
         self._actor: Optional[str] = None
@@ -37,38 +36,40 @@ class RequestBuilder:
         self._evidence: List[str] = []
         self._constraints: Dict[str, Any] = {}
         self._metadata: Dict[str, Any] = {}
-    
+
     def with_id(self, request_id: str) -> RequestBuilder:
         """Set request ID."""
         self._request_id = request_id
         return self
-    
+
     def with_actor(self, actor: str) -> RequestBuilder:
         """Set actor."""
         self._actor = actor
         return self
-    
+
     def with_intent(self, intent: str) -> RequestBuilder:
         """Set intent."""
         self._intent = intent
         return self
-    
-    def with_tool(self, name: str, params: Optional[Dict[str, Any]] = None) -> RequestBuilder:
+
+    def with_tool(
+        self, name: str, params: Optional[Dict[str, Any]] = None
+    ) -> RequestBuilder:
         """Set tool call."""
         self._tool_name = name
         self._tool_params = params or {}
         return self
-    
+
     def with_param(self, key: str, value: Any) -> RequestBuilder:
         """Add a tool parameter."""
         self._tool_params[key] = value
         return self
-    
+
     def with_evidence(self, *evidence_ids: str) -> RequestBuilder:
         """Add evidence IDs."""
         self._evidence.extend(evidence_ids)
         return self
-    
+
     def with_constraints(
         self,
         scope: Optional[str] = None,
@@ -83,19 +84,19 @@ class RequestBuilder:
         if success_criteria:
             self._constraints["success_criteria"] = success_criteria
         return self
-    
+
     def with_metadata(self, key: str, value: Any) -> RequestBuilder:
         """Add metadata."""
         self._metadata[key] = value
         return self
-    
+
     def build(self) -> Request:
         """
         Build the request.
-        
+
         Returns:
             Constructed Request object
-            
+
         Raises:
             ValueError: If required fields are missing
         """
@@ -103,16 +104,16 @@ class RequestBuilder:
             raise ValueError("actor is required")
         if not self._intent:
             raise ValueError("intent is required")
-        
+
         request_id = self._request_id or f"req-{uuid.uuid4().hex[:8]}"
-        
+
         tool_call = None
         if self._tool_name:
             tool_call = ToolCall(
                 name=self._tool_name,
                 params=self._tool_params,
             )
-        
+
         return Request(
             request_id=request_id,
             actor=self._actor,
@@ -121,7 +122,7 @@ class RequestBuilder:
             evidence=self._evidence if self._evidence else None,
             constraints=self._constraints if self._constraints else None,
         )
-    
+
     def reset(self) -> RequestBuilder:
         """Reset builder to initial state."""
         self._request_id = None
@@ -138,7 +139,7 @@ class RequestBuilder:
 class PolicyBuilder:
     """
     Fluent builder for constructing jurisdiction policies.
-    
+
     Example:
         policy = (
             PolicyBuilder()
@@ -149,53 +150,53 @@ class PolicyBuilder:
             .build()
         )
     """
-    
+
     def __init__(self):
         self._allowed_actors: List[str] = []
         self._allowed_tools: List[str] = []
         self._require_tool_call: bool = True
         self._max_intent_length: int = 1000
         self._custom_rules: List = []
-    
+
     def allow_actor(self, actor: str) -> PolicyBuilder:
         """Allow a single actor."""
         self._allowed_actors.append(actor)
         return self
-    
+
     def allow_actors(self, *actors: str) -> PolicyBuilder:
         """Allow multiple actors."""
         self._allowed_actors.extend(actors)
         return self
-    
+
     def allow_tool(self, tool: str) -> PolicyBuilder:
         """Allow a single tool."""
         self._allowed_tools.append(tool)
         return self
-    
+
     def allow_tools(self, *tools: str) -> PolicyBuilder:
         """Allow multiple tools."""
         self._allowed_tools.extend(tools)
         return self
-    
+
     def require_tool_call(self, required: bool = True) -> PolicyBuilder:
         """Set whether tool_call is required."""
         self._require_tool_call = required
         return self
-    
+
     def with_max_intent_length(self, length: int) -> PolicyBuilder:
         """Set maximum intent length."""
         self._max_intent_length = length
         return self
-    
+
     def with_custom_rule(self, rule) -> PolicyBuilder:
         """Add a custom rule function."""
         self._custom_rules.append(rule)
         return self
-    
+
     def build(self) -> JurisdictionPolicy:
         """
         Build the policy.
-        
+
         Returns:
             Constructed JurisdictionPolicy object
         """
@@ -206,7 +207,7 @@ class PolicyBuilder:
             max_intent_length=self._max_intent_length,
             custom_rules=self._custom_rules,
         )
-    
+
     def reset(self) -> PolicyBuilder:
         """Reset builder to initial state."""
         self._allowed_actors = []
@@ -215,12 +216,12 @@ class PolicyBuilder:
         self._max_intent_length = 1000
         self._custom_rules = []
         return self
-    
+
     @classmethod
     def strict(cls) -> PolicyBuilder:
         """Create a builder pre-configured for strict mode."""
         return cls().require_tool_call(True).with_max_intent_length(500)
-    
+
     @classmethod
     def permissive(cls) -> PolicyBuilder:
         """Create a builder pre-configured for permissive mode."""
@@ -236,7 +237,7 @@ class PolicyBuilder:
 class ToolCallBuilder:
     """
     Fluent builder for constructing tool calls.
-    
+
     Example:
         tool_call = (
             ToolCallBuilder("read_file")
@@ -245,21 +246,21 @@ class ToolCallBuilder:
             .build()
         )
     """
-    
+
     def __init__(self, name: str):
         self._name = name
         self._params: Dict[str, Any] = {}
-    
+
     def with_param(self, key: str, value: Any) -> ToolCallBuilder:
         """Add a parameter."""
         self._params[key] = value
         return self
-    
+
     def with_params(self, params: Dict[str, Any]) -> ToolCallBuilder:
         """Add multiple parameters."""
         self._params.update(params)
         return self
-    
+
     def build(self) -> ToolCall:
         """Build the tool call."""
         return ToolCall(
@@ -269,6 +270,7 @@ class ToolCallBuilder:
 
 
 # Convenience functions
+
 
 def request() -> RequestBuilder:
     """Create a new request builder."""

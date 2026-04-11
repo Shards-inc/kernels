@@ -36,7 +36,7 @@ Author: KERNELS Team
 License: MIT
 """
 
-from typing import Callable, Optional, Dict, Any, List, TypeVar, Type
+from typing import Callable, Optional, Dict, Any, List, TypeVar
 from dataclasses import dataclass
 import uuid
 
@@ -44,6 +44,7 @@ import uuid
 try:
     from langgraph.graph import StateGraph
     from pydantic import BaseModel
+
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
@@ -62,13 +63,14 @@ from kernels.variants.base import BaseKernel
 # Try to import LangChain adapter (we extend it)
 try:
     from kernels.integrations.langchain_adapter import LangChainAdapter
+
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
     LangChainAdapter = object
 
 
-StateType = TypeVar('StateType')
+StateType = TypeVar("StateType")
 
 
 @dataclass
@@ -273,7 +275,9 @@ class LangGraphAdapter:
                 description=description or f"LangGraph node: {name}",
             )
 
-        def governed_node(state: StateType, permit_token: Optional[PermitToken] = None) -> StateType:
+        def governed_node(
+            state: StateType, permit_token: Optional[PermitToken] = None
+        ) -> StateType:
             """Governed node execution with state transition tracking."""
 
             # Record transition
@@ -283,9 +287,9 @@ class LangGraphAdapter:
             # Convert state to dict for KERNELS
             if isinstance(state, dict):
                 state_dict = state
-            elif hasattr(state, '__dict__'):
+            elif hasattr(state, "__dict__"):
                 state_dict = state.__dict__
-            elif hasattr(state, 'dict'):
+            elif hasattr(state, "dict"):
                 state_dict = state.dict()
             else:
                 state_dict = {"state": str(state)}
@@ -316,9 +320,9 @@ class LangGraphAdapter:
                 # Convert updated state to dict
                 if isinstance(updated_state, dict):
                     updated_state_dict = updated_state
-                elif hasattr(updated_state, '__dict__'):
+                elif hasattr(updated_state, "__dict__"):
                     updated_state_dict = updated_state.__dict__
-                elif hasattr(updated_state, 'dict'):
+                elif hasattr(updated_state, "dict"):
                     updated_state_dict = updated_state.dict()
                 else:
                     updated_state_dict = {"state": str(updated_state)}

@@ -9,11 +9,9 @@ from __future__ import annotations
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Any, Dict, Optional, Type
-from dataclasses import asdict
 import threading
 
-from kernels.common.types import Request, ToolCall, Decision
-from kernels.common.errors import KernelError
+from kernels.common.types import Request, ToolCall
 from kernels.variants.base import BaseKernel
 from kernels.variants.strict_kernel import StrictKernel
 from kernels.jurisdiction.policy import JurisdictionPolicy
@@ -21,10 +19,10 @@ from kernels.jurisdiction.policy import JurisdictionPolicy
 
 class KernelRequestHandler(BaseHTTPRequestHandler):
     """HTTP request handler for kernel server."""
-    
+
     # Class-level kernel reference (set by server)
     kernel: Optional[BaseKernel] = None
-    
+
     def _send_json(self, status: int, data: Dict[str, Any]) -> None:
         """Send JSON response."""
         self.send_response(status)
@@ -32,13 +30,13 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode("utf-8"))
-    
+
     def _read_json(self) -> Dict[str, Any]:
         """Read JSON from request body."""
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length)
         return json.loads(body.decode("utf-8")) if body else {}
-    
+
     def do_OPTIONS(self) -> None:
         """Handle CORS preflight."""
         self.send_response(200)
@@ -46,7 +44,7 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
-    
+
     def do_GET(self) -> None:
         """Handle GET requests."""
         if self.path == "/health":
@@ -61,7 +59,7 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
             self._handle_info()
         else:
             self._send_json(404, {"error": "Not found"})
-    
+
     def do_POST(self) -> None:
         """Handle POST requests."""
         if self.path == "/submit":
@@ -70,69 +68,81 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
             self._handle_halt()
         else:
             self._send_json(404, {"error": "Not found"})
-    
+
     def _handle_info(self) -> None:
         """Handle info request."""
-        self._send_json(200, {
-            "name": "KERNELS",
-            "version": "0.1.0",
-            "kernel_id": self.kernel.kernel_id if self.kernel else None,
-        })
-    
+        self._send_json(
+            200,
+            {
+                "name": "KERNELS",
+                "version": "0.1.0",
+                "kernel_id": self.kernel.kernel_id if self.kernel else None,
+            },
+        )
+
     def _handle_health(self) -> None:
         """Handle health check."""
         if not self.kernel:
             self._send_json(503, {"status": "unhealthy", "error": "No kernel"})
             return
-        
-        self._send_json(200, {
-            "status": "healthy",
-            "kernel_state": self.kernel.state.value,
-        })
-    
+
+        self._send_json(
+            200,
+            {
+                "status": "healthy",
+                "kernel_state": self.kernel.state.value,
+            },
+        )
+
     def _handle_status(self) -> None:
         """Handle status request."""
         if not self.kernel:
             self._send_json(503, {"error": "No kernel"})
             return
-        
-        self._send_json(200, {
-            "kernel_id": self.kernel.kernel_id,
-            "state": self.kernel.state.value,
-        })
-    
+
+        self._send_json(
+            200,
+            {
+                "kernel_id": self.kernel.kernel_id,
+                "state": self.kernel.state.value,
+            },
+        )
+
     def _handle_evidence(self) -> None:
         """Handle evidence export."""
         if not self.kernel:
             self._send_json(503, {"error": "No kernel"})
             return
-        
+
         evidence = self.kernel.export_evidence()
         self._send_json(200, evidence)
-    
+
     def _handle_policy(self) -> None:
         """Handle policy request."""
         if not self.kernel:
             self._send_json(503, {"error": "No kernel"})
             return
-        
+
         policy = self.kernel.policy
-        self._send_json(200, {
-            "allowed_actors": policy.allowed_actors,
-            "allowed_tools": policy.allowed_tools,
-            "require_tool_call": policy.require_tool_call,
-            "max_intent_length": policy.max_intent_length,
-        })
-    
+        self._send_json(
+            200,
+            {
+                "allowed_actors": policy.allowed_actors,
+                "allowed_tools": policy.allowed_tools,
+                "require_tool_call": policy.require_tool_call,
+                "max_intent_length": policy.max_intent_length,
+            },
+        )
+
     def _handle_submit(self) -> None:
         """Handle request submission."""
         if not self.kernel:
             self._send_json(503, {"error": "No kernel"})
             return
-        
+
         try:
             data = self._read_json()
-            
+
             # Build request
             tool_call = None
             if "tool_call" in data:
@@ -140,7 +150,7 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
                     name=data["tool_call"]["name"],
                     params=data["tool_call"].get("params", {}),
                 )
-            
+
             request = Request(
                 request_id=data["request_id"],
                 actor=data["actor"],
@@ -149,35 +159,41 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
                 evidence=data.get("evidence"),
                 constraints=data.get("constraints"),
             )
-            
+
             # Submit to kernel
             receipt = self.kernel.submit(request)
-            
-            self._send_json(200, {
-                "request_id": receipt.request_id,
-                "status": receipt.status,
-                "decision": receipt.decision.value,
-                "result": receipt.result,
-                "error": receipt.error,
-            })
-            
+
+            self._send_json(
+                200,
+                {
+                    "request_id": receipt.request_id,
+                    "status": receipt.status,
+                    "decision": receipt.decision.value,
+                    "result": receipt.result,
+                    "error": receipt.error,
+                },
+            )
+
         except KeyError as e:
             self._send_json(400, {"error": f"Missing field: {e}"})
         except Exception as e:
             self._send_json(500, {"error": str(e)})
-    
+
     def _handle_halt(self) -> None:
         """Handle halt request."""
         if not self.kernel:
             self._send_json(503, {"error": "No kernel"})
             return
-        
+
         self.kernel.halt()
-        self._send_json(200, {
-            "status": "halted",
-            "kernel_state": self.kernel.state.value,
-        })
-    
+        self._send_json(
+            200,
+            {
+                "status": "halted",
+                "kernel_state": self.kernel.state.value,
+            },
+        )
+
     def log_message(self, format: str, *args) -> None:
         """Override to customize logging."""
         pass  # Suppress default logging
@@ -186,15 +202,15 @@ class KernelRequestHandler(BaseHTTPRequestHandler):
 class KernelServer:
     """
     HTTP server for KERNELS.
-    
+
     Exposes kernel functionality via REST API.
-    
+
     Example:
         kernel = StrictKernel(kernel_id="server-001")
         server = KernelServer(kernel, port=8080)
         server.start()
     """
-    
+
     def __init__(
         self,
         kernel: BaseKernel,
@@ -206,28 +222,28 @@ class KernelServer:
         self.port = port
         self._server: Optional[HTTPServer] = None
         self._thread: Optional[threading.Thread] = None
-    
+
     def _create_handler(self) -> Type[KernelRequestHandler]:
         """Create handler class with kernel reference."""
         kernel = self.kernel
-        
+
         class Handler(KernelRequestHandler):
             pass
-        
+
         Handler.kernel = kernel
         return Handler
-    
+
     def start(self, blocking: bool = True) -> None:
         """
         Start the server.
-        
+
         Args:
             blocking: If True, block until server stops.
                      If False, run in background thread.
         """
         handler = self._create_handler()
         self._server = HTTPServer((self.host, self.port), handler)
-        
+
         if blocking:
             print(f"KERNELS server running on http://{self.host}:{self.port}")
             self._server.serve_forever()
@@ -236,7 +252,7 @@ class KernelServer:
             self._thread.daemon = True
             self._thread.start()
             print(f"KERNELS server started on http://{self.host}:{self.port}")
-    
+
     def stop(self) -> None:
         """Stop the server."""
         if self._server:
@@ -245,7 +261,7 @@ class KernelServer:
         if self._thread:
             self._thread.join(timeout=5)
             self._thread = None
-    
+
     @property
     def url(self) -> str:
         """Get server URL."""
@@ -260,7 +276,7 @@ def run_server(
 ) -> None:
     """
     Convenience function to run a kernel server.
-    
+
     Args:
         kernel_id: Kernel identifier
         host: Host to bind to
@@ -269,7 +285,7 @@ def run_server(
     """
     kernel = StrictKernel(kernel_id=kernel_id, policy=policy)
     server = KernelServer(kernel, host, port)
-    
+
     try:
         server.start(blocking=True)
     except KeyboardInterrupt:
