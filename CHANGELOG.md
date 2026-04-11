@@ -9,6 +9,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ### Added
 
 - Added a production-grade HPC CI/CD architecture reference document covering deterministic build strategy, GPU matrix validation, release gating, and scaling guidance.
+- Added `scripts/org_repo_review.py` to automate organisation-wide repository cloning, lint/type/test/security execution, and consolidated report generation.
 - Added new GitHub Actions workflows for expanded HPC matrix validation, dedicated GPU hardware testing, benchmark regression gating, and docs build verification.
 - Added a benchmark regression check utility script with baseline support to enforce latency performance thresholds in CI.
 - Added MkDocs configuration to enable strict documentation build checks in CI.

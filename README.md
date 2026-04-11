@@ -139,6 +139,20 @@ python examples/01_minimal_request.py
 python -m kernels --help
 ```
 
+## Organisation-wide repository review automation
+
+Use the helper below to clone every repository in a GitHub organisation, run
+standard quality checks, and export machine-readable + markdown summaries.
+
+```bash
+export GITHUB_TOKEN=ghp_xxx   # token with access to your organisation repos
+python scripts/org_repo_review.py --org Shards-foundation
+```
+
+Outputs:
+- `reports/org-review.json` with full command output and exit codes.
+- `reports/org-review.md` with per-repo pass/fail status.
+
 ---
 
 ## Specs + Docs
