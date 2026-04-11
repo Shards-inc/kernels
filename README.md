@@ -4,8 +4,6 @@
 [![CI](https://github.com/Shards-foundation/kernels/actions/workflows/ci.yml/badge.svg)](https://github.com/Shards-foundation/kernels/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/Shards-foundation/kernels/branch/main/graph/badge.svg)](https://codecov.io/gh/Shards-foundation/kernels)
 
-https://codecov.io/gh/Shards-foundation/kernels/graphs/sunburst.svg?token=L1WHYCA56S
-
 A **kernel** is a deterministic state machine that governs AI agent execution via **jurisdiction**, **fail-closed arbitration**, and an **append-only hash-chained audit ledger**.
 
 **Hard constraint:** no tool execution without an explicit `ALLOW`; no `ALLOW` without a committed audit decision.
