@@ -5,7 +5,7 @@ error handling. No implicit execution occurs.
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from kernels.common.types import ToolCall
 from kernels.common.errors import ToolError
@@ -42,7 +42,9 @@ class Dispatcher:
         """Return the tool registry."""
         return self._registry
 
-    def validate_tool_call(self, tool_call: ToolCall | dict[str, Any]) -> list[str]:
+    def validate_tool_call(
+        self, tool_call: Union[ToolCall, dict[str, Any]]
+    ) -> list[str]:
         """Validate a tool call before execution.
 
         Args:
@@ -79,7 +81,7 @@ class Dispatcher:
 
         return errors
 
-    def execute(self, tool_call: ToolCall | dict[str, Any]) -> ExecutionResult:
+    def execute(self, tool_call: Union[ToolCall, dict[str, Any]]) -> ExecutionResult:
         """Execute a tool call.
 
         Args:
