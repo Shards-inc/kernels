@@ -168,7 +168,11 @@ def run_flask_server(
         host: Host to bind to
         port: Port to listen on
         policy: Jurisdiction policy
-        debug: Enable debug mode
+        debug: Deprecated. Debug mode is disabled for security hardening.
     """
     app = create_flask_app(kernel_id=kernel_id, policy=policy)
-    app.run(host=host, port=port, debug=debug)
+    if debug:
+        raise ValueError(
+            "Debug mode is disabled for security; run behind a proper debugger."
+        )
+    app.run(host=host, port=port)
