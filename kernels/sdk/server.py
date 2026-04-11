@@ -214,7 +214,7 @@ class KernelServer:
     def __init__(
         self,
         kernel: BaseKernel,
-        host: str = "0.0.0.0",
+        host: str = "127.0.0.1",
         port: int = 8080,
     ):
         self.kernel = kernel
@@ -270,7 +270,7 @@ class KernelServer:
 
 def run_server(
     kernel_id: str = "server-001",
-    host: str = "0.0.0.0",
+    host: str = "127.0.0.1",
     port: int = 8080,
     policy: Optional[JurisdictionPolicy] = None,
 ) -> None:

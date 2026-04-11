@@ -27,7 +27,7 @@ Usage:
     # Wrap AutoGPT commands
     @adapter.governed_command("execute_shell", "Execute shell command")
     def execute_shell(command: str) -> str:
-        return os.popen(command).read()
+        return safe_command_runner(command)
 
     # Execute with governance
     result = execute_shell(command="ls -la", permit_token=permit)
@@ -206,7 +206,7 @@ class AutoGPTAdapter:
         # Wrap command with decorator
         @adapter.governed_command("execute_shell", "Execute shell command")
         def execute_shell(command: str) -> str:
-            return os.popen(command).read()
+            return safe_command_runner(command)
 
         # Or wrap existing command
         governed_cmd = adapter.wrap_command("cmd_name", cmd_func)
@@ -369,7 +369,7 @@ class AutoGPTAdapter:
         Usage:
             @adapter.governed_command("execute_shell", "Execute shell command", risk_score=1.0)
             def execute_shell(command: str) -> str:
-                return os.popen(command).read()
+                return safe_command_runner(command)
 
         Args:
             name: Command name

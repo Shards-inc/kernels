@@ -213,7 +213,7 @@ def create_fastapi_app(
 
 def run_fastapi_server(
     kernel_id: str = "fastapi-kernel",
-    host: str = "0.0.0.0",
+    host: str = "127.0.0.1",
     port: int = 8080,
     policy: Optional[JurisdictionPolicy] = None,
 ) -> None:
