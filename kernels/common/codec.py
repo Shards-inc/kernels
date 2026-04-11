@@ -5,7 +5,7 @@ hashing and reproducible behavior across platforms.
 """
 
 import json
-from typing import Any
+from typing import Any, Optional
 
 
 def serialize_deterministic(data: Any) -> str:
@@ -49,18 +49,18 @@ def serialize_for_audit(
     state_from: str,
     state_to: str,
     ts_ms: int,
-    tool_name: str | None = None,
-    params_hash: str | None = None,
-    evidence_hash: str | None = None,
-    error: str | None = None,
-    permit_digest: str | None = None,
-    permit_verification: str | None = None,
-    permit_denial_reasons: tuple[str, ...] | None = None,
-    proposal_hash: str | None = None,
-    permit_nonce: str | None = None,
-    permit_issuer: str | None = None,
-    permit_subject: str | None = None,
-    permit_max_executions: int | None = None,
+    tool_name: Optional[str] = None,
+    params_hash: Optional[str] = None,
+    evidence_hash: Optional[str] = None,
+    error: Optional[str] = None,
+    permit_digest: Optional[str] = None,
+    permit_verification: Optional[str] = None,
+    permit_denial_reasons: Optional[tuple[str, ...]] = None,
+    proposal_hash: Optional[str] = None,
+    permit_nonce: Optional[str] = None,
+    permit_issuer: Optional[str] = None,
+    permit_subject: Optional[str] = None,
+    permit_max_executions: Optional[int] = None,
 ) -> str:
     """Serialize audit entry data for hashing.
 
