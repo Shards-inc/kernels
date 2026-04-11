@@ -3,7 +3,7 @@
 Provides request validation and ambiguity detection functions.
 """
 
-from typing import Any
+from typing import Any, Union
 
 from kernels.common.types import KernelRequest, ToolCall
 from kernels.common.codec import serialize_deterministic
@@ -54,7 +54,7 @@ def validate_request(request: KernelRequest) -> list[str]:
     return errors
 
 
-def validate_tool_call(tool_call: ToolCall | dict[str, Any]) -> list[str]:
+def validate_tool_call(tool_call: Union[ToolCall, dict[str, Any]]) -> list[str]:
     """Validate a tool call structure.
 
     Args:

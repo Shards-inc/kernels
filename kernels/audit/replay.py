@@ -5,7 +5,7 @@ the hash chain computation and checking for violations.
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from kernels.common.hashing import compute_chain_hash, genesis_hash
 from kernels.common.codec import serialize_for_audit
@@ -23,7 +23,7 @@ class ReplayResult:
 
 def replay_and_verify(
     entries: list[dict[str, Any]],
-    expected_root_hash: str | None = None,
+    expected_root_hash: Optional[str] = None,
 ) -> tuple[bool, list[str]]:
     """Replay and verify an audit ledger.
 

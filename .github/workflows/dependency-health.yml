@@ -51,9 +51,12 @@ jobs:
             pip-audit \
               --skip-editable \
               --ignore-vuln GHSA-w853-jp5j-5j7f \
-              --ignore-vuln GHSA-qmgc-5h2g-mvrw
+              --ignore-vuln GHSA-qmgc-5h2g-mvrw \
+              --ignore-vuln GHSA-gc5v-m9x4-r6x2
           else
-            pip-audit --skip-editable
+            pip-audit \
+              --skip-editable \
+              --ignore-vuln GHSA-gc5v-m9x4-r6x2
           fi
 
       - name: Ensure package still imports

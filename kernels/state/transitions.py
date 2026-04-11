@@ -4,6 +4,8 @@ Defines the allowed state transitions and provides functions to check
 transition validity.
 """
 
+from typing import Optional
+
 from kernels.common.types import KernelState
 
 
@@ -79,7 +81,7 @@ def is_terminal(state: KernelState) -> bool:
     return len(ALLOWED_TRANSITIONS.get(state, frozenset())) == 0
 
 
-def validate_transition_path(path: list[KernelState]) -> tuple[bool, str | None]:
+def validate_transition_path(path: list[KernelState]) -> tuple[bool, Optional[str]]:
     """Validate a sequence of state transitions.
 
     Args:
