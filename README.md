@@ -161,12 +161,12 @@ Outputs:
 
 | Document | Content |
 |----------|---------|
-| [spec/SPEC.md](spec/SPEC.md) | Normative requirements |
-| [spec/STATES.md](spec/STATES.md) | State machine + transitions |
-| [spec/JURISDICTION.md](spec/JURISDICTION.md) | Policy rules |
-| [spec/AUDIT.md](spec/AUDIT.md) | Ledger + hashing + evidence bundle |
-| [spec/ERROR_MODEL.md](spec/ERROR_MODEL.md) | Error taxonomy |
-| [spec/VARIANTS.md](spec/VARIANTS.md) | Posture variants |
+| [spec/SPEC.md](https://github.com/Shards-foundation/kernels/blob/main/spec/SPEC.md) | Normative requirements |
+| [spec/STATES.md](https://github.com/Shards-foundation/kernels/blob/main/spec/STATES.md) | State machine + transitions |
+| [spec/JURISDICTION.md](https://github.com/Shards-foundation/kernels/blob/main/spec/JURISDICTION.md) | Policy rules |
+| [spec/AUDIT.md](https://github.com/Shards-foundation/kernels/blob/main/spec/AUDIT.md) | Ledger + hashing + evidence bundle |
+| [spec/ERROR_MODEL.md](https://github.com/Shards-foundation/kernels/blob/main/spec/ERROR_MODEL.md) | Error taxonomy |
+| [spec/VARIANTS.md](https://github.com/Shards-foundation/kernels/blob/main/spec/VARIANTS.md) | Posture variants |
 
 **Architecture + Threat Model**:
 

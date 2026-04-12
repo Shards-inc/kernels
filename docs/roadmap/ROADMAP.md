@@ -1,7 +1,7 @@
 # KERNELS Roadmap
 
 **Version:** 0.1.0  
-**Last Updated:** January 2025
+**Last Updated:** Capability progression (non-dated)
 
 ---
 
@@ -11,10 +11,10 @@ KERNELS becomes the standard control plane for governed AI agent execution, maki
 
 ---
 
-## Release Timeline
+## Capability Progression
 
 ```
-2025 Q1          2025 Q2          2025 Q3          2025 Q4
+Phase 1         Phase 2         Phase 3         Phase 4
     │                │                │                │
     ▼                ▼                ▼                ▼
 ┌────────┐      ┌────────┐      ┌────────┐      ┌────────┐
@@ -29,7 +29,7 @@ KERNELS becomes the standard control plane for governed AI agent execution, maki
 ## Phase 1: Foundation (v0.1.x) — CURRENT
 
 **Status:** ✅ Complete  
-**Timeline:** Q4 2024 - Q1 2025
+**Progression Slot:** Initial foundation capabilities
 
 ### Deliverables
 
@@ -58,7 +58,7 @@ KERNELS becomes the standard control plane for governed AI agent execution, maki
 ## Phase 2: Hardening (v0.2.x)
 
 **Status:** 🔄 In Progress  
-**Timeline:** Q1 2025
+**Progression Slot:** Security and reliability hardening
 
 ### Deliverables
 
@@ -75,19 +75,19 @@ KERNELS becomes the standard control plane for governed AI agent execution, maki
 
 ### Milestones
 
-| Milestone | Target Date | Criteria |
-|-----------|-------------|----------|
-| M2.1 Security audit complete | Feb 2025 | No critical findings |
-| M2.2 Permit tokens working | Feb 2025 | End-to-end flow |
-| M2.3 CI/CD operational | Mar 2025 | Auto-test on PR |
-| M2.4 v0.2.0 release | Mar 2025 | All P0 items done |
+| Milestone | Sequence | Criteria |
+|-----------|----------|----------|
+| M2.1 Security audit complete | First | No critical findings |
+| M2.2 Permit tokens working | Second | End-to-end flow |
+| M2.3 CI/CD operational | Third | Auto-test on PR |
+| M2.4 v0.2.0 release | Fourth | All P0 items done |
 
 ---
 
 ## Phase 3: Scale (v0.3.x)
 
 **Status:** 🔲 Planned  
-**Timeline:** Q2 2025
+**Progression Slot:** Scalability and distributed architecture
 
 ### Deliverables
 
@@ -122,7 +122,7 @@ Future (v0.3.x):
 ## Phase 4: Ecosystem (v0.4.x - v1.0.0)
 
 **Status:** 🔲 Planned  
-**Timeline:** Q3-Q4 2025
+**Progression Slot:** Ecosystem integrations and platform maturity
 
 ### Deliverables
 
@@ -149,7 +149,7 @@ Future (v0.3.x):
 
 ## v1.0.0 Release Criteria
 
-**Target:** Q4 2025
+**Target:** After Phase 4 criteria are satisfied
 
 ### Must Have
 
@@ -174,7 +174,7 @@ Future (v0.3.x):
 
 ## Long-Term Vision (v2.x+)
 
-### 2026 and Beyond
+### Long Horizon
 
 | Area | Vision |
 |------|--------|
@@ -207,10 +207,14 @@ Future (v0.3.x):
 
 ---
 
-## Changelog
+## Methodology
 
-| Date | Change |
+Timeline language is intentionally non-dated and ordered by capability progression to avoid unsupported calendar claims; dates are only retained when directly verifiable from commit metadata.
+
+## Revision Notes
+
+| Entry | Change |
 |------|--------|
-| Jan 2025 | Initial roadmap created |
-| Jan 2025 | Phase 1 marked complete |
-| Jan 2025 | Phase 2 started |
+| 1 | Initial roadmap created |
+| 2 | Phase 1 marked complete |
+| 3 | Phase 2 started |
