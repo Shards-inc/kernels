@@ -20,10 +20,10 @@ This document shows how these properties map to specific regulatory requirements
 ## Table of Contents
 
 1. [EU AI Act](#eu-ai-act)
-2. [ISO 42001 AI Management System](#iso-42001)
-3. [UK AI Safety Institute Guidance](#uk-aisi)
-4. [NIST AI Risk Management Framework](#nist-ai-rmf)
-5. [SOC 2 Type II Controls](#soc-2)
+2. [ISO 42001 AI Management System](#iso-42001-ai-management-system)
+3. [UK AI Safety Institute Guidance](#uk-ai-safety-institute-guidance)
+4. [NIST AI Risk Management Framework](#nist-ai-risk-management-framework)
+5. [SOC 2 Type II Controls](#soc-2-type-ii-controls)
 6. [Mapping Summary Table](#mapping-summary)
 
 ---
