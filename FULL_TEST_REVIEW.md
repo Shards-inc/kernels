@@ -72,6 +72,23 @@ Impact: **Positive signal** for current behavior under covered scenarios, but do
 4. **Re-run full CI sequence**
    - `make ci`
 
+
+## Potential Improvements
+
+Coverage reporting is already integrated, so the next highest-value improvements are:
+
+1. **Enforce per-module minimum coverage targets**
+   - Define module-level floors (for example, higher thresholds for `kernels/` core logic and pragmatic thresholds for adapters/examples).
+   - Fail CI when a module drops below its minimum.
+
+2. **Add diff-coverage thresholds in CI**
+   - Require newly changed lines to meet a minimum diff-coverage target before merge.
+   - This keeps quality rising even when total-project coverage changes slowly.
+
+Existing implementation points that confirm baseline coverage integration:
+- `README.md` already exposes a Codecov coverage badge.
+- `.github/workflows/ci.yml` already uploads `coverage.xml` to Codecov.
+
 ## Conclusion
 
 The repository has a **passing runtime suite** but currently fails key static quality gates (lint, format, typecheck). Prioritizing auto-fixable Ruff issues and then type-model alignment should significantly improve CI stability.
