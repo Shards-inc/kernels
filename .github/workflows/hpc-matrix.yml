@@ -46,7 +46,7 @@ jobs:
         run: pytest -m "not gpu" --cov=kernels --cov=implementations --cov-fail-under=85
 
       - name: Integration tests
-        run: pytest tests -m "integration and not gpu" -q
+        run: pytest tests -q
 
   cuda-compat:
     name: CUDA compatibility (containerized)
@@ -74,4 +74,4 @@ jobs:
       - name: Import and fallback smoke check
         run: |
           python3 -c "import kernels; print('kernels import ok')"
-          pytest tests -m "fallback" -q
+          pytest tests -q

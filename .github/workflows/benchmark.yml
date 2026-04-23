@@ -27,7 +27,7 @@ jobs:
           pip install pytest pytest-benchmark
 
       - name: Run benchmark suite
-        run: pytest tests -m "benchmark" --benchmark-json benchmark.json -q
+        run: pytest tests --benchmark-json benchmark.json -q
 
       - name: Enforce regression threshold
         run: python scripts/ci/check_benchmark_regression.py benchmark.json 0.05

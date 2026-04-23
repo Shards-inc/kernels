@@ -53,11 +53,11 @@ jobs:
 
       - name: GPU integration and numerical tests
         run: |
-          pytest tests -m "gpu or numerical" -q
+          pytest tests -q
 
       - name: Performance regression check
         run: |
-          pytest tests -m "benchmark" --benchmark-json benchmark-${{ matrix.runner_label }}.json -q
+          pytest tests --benchmark-json benchmark-${{ matrix.runner_label }}.json -q
 
       - name: Upload benchmark artifact
         uses: actions/upload-artifact@v4
