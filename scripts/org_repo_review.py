@@ -7,13 +7,14 @@ import argparse
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
@@ -31,6 +32,14 @@ class RepoReview:
     path: str
     checks: List[CommandResult] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+
+
+class RepoSyncError(RuntimeError):
+    """Raised when git clone/fetch/reset fails for a repository."""
+
+    def __init__(self, message: str, result: CommandResult):
+        super().__init__(message)
+        self.result = result
 
 
 def run_command(command: str, cwd: Path, timeout_seconds: int) -> CommandResult:
@@ -129,21 +138,50 @@ def resolve_repo_checks(repo_path: Path) -> List[str]:
     return checks
 
 
-def clone_or_update_repo(repo_url: str, destination: Path) -> None:
+def build_clone_url(repo_url: str, token: Optional[str]) -> str:
+    if not token:
+        return repo_url
+    parsed_url = urlsplit(repo_url)
+    if parsed_url.scheme != "https" or not parsed_url.netloc:
+        return repo_url
+    token_netloc = f"x-access-token:{quote(token, safe='')}@{parsed_url.netloc}"
+    return urlunsplit(
+        (
+            parsed_url.scheme,
+            token_netloc,
+            parsed_url.path,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
+    )
+
+
+def clone_or_update_repo(repo_url: str, destination: Path, token: Optional[str]) -> None:
     if destination.exists() and (destination / ".git").exists():
-        run_command("git fetch --all --prune", destination, timeout_seconds=180)
-        run_command("git reset --hard origin/HEAD", destination, timeout_seconds=180)
+        fetch_result = run_command(
+            "git fetch --all --prune", destination, timeout_seconds=180
+        )
+        if fetch_result.return_code != 0:
+            raise RepoSyncError("Failed to fetch latest refs.", fetch_result)
+        reset_result = run_command(
+            "git reset --hard origin/HEAD", destination, timeout_seconds=180
+        )
+        if reset_result.return_code != 0:
+            raise RepoSyncError("Failed to reset repository to origin/HEAD.", reset_result)
         return
 
     if destination.exists():
         shutil.rmtree(destination)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    run_command(
-        f"git clone --depth 1 {repo_url} {destination}",
+    authenticated_repo_url = build_clone_url(repo_url, token)
+    clone_result = run_command(
+        f"git clone --depth 1 {shlex.quote(authenticated_repo_url)} {shlex.quote(str(destination))}",
         destination.parent,
         timeout_seconds=300,
     )
+    if clone_result.return_code != 0:
+        raise RepoSyncError("Failed to clone repository.", clone_result)
 
 
 def write_reports(output_dir: Path, reviews: List[RepoReview]) -> None:
@@ -230,6 +268,7 @@ def main() -> int:
 
     workspace = Path(args.workspace).resolve()
     reviews: List[RepoReview] = []
+    had_sync_failures = False
 
     for repo in repos:
         repo_name = repo["name"]
@@ -237,7 +276,13 @@ def main() -> int:
         repo_path = workspace / repo_name
 
         review = RepoReview(name=repo_name, path=str(repo_path))
-        clone_or_update_repo(clone_url, repo_path)
+        try:
+            clone_or_update_repo(clone_url, repo_path, token)
+        except RepoSyncError as exc:
+            had_sync_failures = True
+            review.warnings.append(f"{exc} Git output: {exc.result.stderr or exc.result.stdout}")
+            reviews.append(review)
+            continue
 
         checks = resolve_repo_checks(repo_path)
         if not checks:
@@ -271,6 +316,13 @@ def main() -> int:
     write_reports(Path(args.output), reviews)
     print(f"Review completed for {len(reviews)} repositories.")
     print(f"Reports written to: {Path(args.output).resolve()}")
+    if had_sync_failures:
+        print(
+            "One or more repositories could not be cloned or updated. "
+            "See warnings in the report for details.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
