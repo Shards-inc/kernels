@@ -153,6 +153,40 @@ Outputs:
 - `reports/org-review.json` with full command output and exit codes.
 - `reports/org-review.md` with per-repo pass/fail status.
 
+## Autonomous Codex contribution scaffold
+
+This repository now includes a drop-in automation scaffold for closed-loop kernel
+contributions:
+
+- `.github/workflows/codex-pr-generator.yml` captures issue context (when the
+  issue has a `codex` label), prepares a constrained prompt payload, and opens a
+  tracking PR containing run artifacts.
+- `.github/workflows/codex-self-heal.yml` watches failed CI/benchmark runs and
+  opens a `self-heal` issue with structured failure context plus failure
+  taxonomy (`failure_type`, `repair_strategy`).
+- `scripts/agents/codex_generate_patch.py` writes auditable run payloads to
+  `.codex/runs/`.
+- `scripts/agents/build_codex_prompt.py` injects kernel skill constraints from
+  `/skills` into an agent-ready prompt payload with failure-aware routing.
+- `scripts/agents/append_metrics.py` attaches benchmark deltas to each run.
+- `scripts/agents/evaluate_run.py` scores runs and updates
+  `.codex/meta/leaderboard.json` and `.codex/memory/*.json` for active memory.
+- `scripts/agents/run_end_to_end.py` executes the full loop in one command
+  (run generation → metrics attach → prompt build → evaluation).
+
+Quick local smoke test:
+
+```bash
+python scripts/agents/codex_generate_patch.py .github/ISSUE_TEMPLATE/feature_request.md
+latest_run="$(ls -td .codex/runs/* | head -n1)"
+python scripts/agents/append_metrics.py benchmarks/results.sample.json "$latest_run"
+python scripts/agents/build_codex_prompt.py "$latest_run/request.json" --run-dir "$latest_run" --out "$latest_run/prompt.json"
+python scripts/agents/evaluate_run.py "$latest_run"
+
+# or run all stages:
+python scripts/agents/run_end_to_end.py .github/ISSUE_TEMPLATE/feature_request.md --metrics benchmarks/results.sample.json
+```
+
 ---
 
 ## Specs + Docs

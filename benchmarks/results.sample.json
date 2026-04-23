@@ -1,0 +1,6 @@
+{
+  "baseline_latency": 1.2,
+  "candidate_latency": 1.14,
+  "memory_increase": 0.5,
+  "throughput": 4120.0
+}

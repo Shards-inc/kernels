@@ -8,6 +8,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- Added autonomous Codex contribution scaffold workflows: issue-triggered PR generation and CI failure self-healing issue creation.
+- Added `scripts/agents/codex_generate_patch.py` and `scripts/agents/build_codex_prompt.py` for auditable run payload generation and skill-constrained prompt composition.
+- Added `scripts/agents/append_metrics.py` and `scripts/agents/evaluate_run.py` to persist benchmark deltas, score runs, and maintain `.codex/meta` leaderboard + `.codex/memory` learning artifacts.
+- Added `scripts/agents/run_end_to_end.py` to execute the full autonomous scaffold loop in one command for deterministic local/CI validation.
+- Added kernel optimization skill packs under `skills/` (`cuda.md`, `tiling.md`, `memory_coalescing.md`) for structured agent prompt injection.
+- Added failure-aware skill packs (`optimization_strategies.md`, `compatibility_rules.md`) used for prompt routing by failure type.
 - Added a production-grade HPC CI/CD architecture reference document covering deterministic build strategy, GPU matrix validation, release gating, and scaling guidance.
 - Added `scripts/org_repo_review.py` to automate organisation-wide repository cloning, lint/type/test/security execution, and consolidated report generation.
 - Added new GitHub Actions workflows for expanded HPC matrix validation, dedicated GPU hardware testing, benchmark regression gating, and docs build verification.
