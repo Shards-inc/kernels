@@ -41,3 +41,12 @@ version = {attr = "kernels._version.__version__"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["kernels*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = [".github/", "*.md", "*.yaml", "*.yml"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["E501"]
